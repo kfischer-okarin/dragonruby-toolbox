@@ -20,6 +20,15 @@ class Camera < Transformations::Base
   def y(original)
     original.y - @origin.y
   end
+
+  # Line endpoints
+  def x2(original)
+    original.x2 - @origin.x
+  end
+
+  def y2(original)
+    original.y2 - @origin.y
+  end
 end
 
 # Simple night filter
@@ -63,6 +72,14 @@ def tick(args)
   else
     args.outputs.sprites << $camera * [0, 0, 1280, 720, :random_boxes]
   end
+
+  # Arrays and other primitives are also supported
+  args.outputs.primitives << $camera * [
+    [10, 10, 30, 30, 255, 255, 255].solid,
+    [10, 50, 30, 30, 255, 255, 255].border,
+    [10, 100, "Test", 255, 255, 255].label,
+    [10, 10, 1270, 710, 255, 255, 255].line
+  ]
 
   if args.inputs.keyboard.directional_vector
     $camera.move_by([args.inputs.keyboard.directional_vector.x * 10, args.inputs.keyboard.directional_vector.y * 10])
