@@ -7,6 +7,9 @@ require 'app/colors_hsv_hsl.rb'
 require 'lib/attr_sprite_color.rb'
 require 'app/color_accessor.rb'
 
+require 'lib/low_resolution_canvas.rb'
+require 'app/low_resolution.rb'
+
 def tick(args)
   if $example
     $example.tick(args)
@@ -21,6 +24,7 @@ EXAMPLES = [
   { name: 'Transformations', example: TransformationsExample.new },
   { name: 'Colors (HSV / HSL)', example: ColorsHsvHslExample.new },
   { name: 'Colors (Accessor for attr_sprite)', example: ColorAccessorExample.new },
+  { name: 'Low Resolution Canvas', example: LowResolutionExample.new }
 ]
 
 BUTTONS = ('a'..'z').to_a
