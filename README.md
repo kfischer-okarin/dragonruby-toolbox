@@ -11,6 +11,8 @@ Start the demo with
 
 ![Low Resolution](gifs/lowresolution.png)
 
+File to include: [`lib/low_resolution_canvas.rb`](./lib/low_resolution_canvas.rb)
+
 ```rb
 def tick(args)
   # Specify your canvas resolution as the first constructor argument
