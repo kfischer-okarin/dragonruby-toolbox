@@ -41,6 +41,14 @@ class LowResolutionCanvas
     render_target.background_color = color
   end
 
+  def to_screen_point(point)
+    [@x + point.x * scale, @y + point.y * scale]
+  end
+
+  def to_screen_rect(rect)
+    [*to_screen_point(rect), rect.w * scale, rect.h * scale]
+  end
+
   private
 
   def scale
