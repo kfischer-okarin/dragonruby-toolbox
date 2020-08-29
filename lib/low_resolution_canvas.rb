@@ -1,8 +1,8 @@
 class LowResolutionCanvas
   attr_sprite
 
-  def initialize(resolution)
-    @path = :screen
+  def initialize(resolution, render_target_name = :screen)
+    @path = render_target_name
     @source_x, @source_y = [0, 0]
     @source_w, @source_h = resolution
 
