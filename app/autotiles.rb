@@ -4,7 +4,7 @@ class AutotileExample
   def tick(args)
     args.state.initialized ||= { tileset: false }
     if !args.state.initialized[:tileset]
-      args.render_target(:tileset).sprites << DRT::Autotile.generate_full_tileset('sprites/grass-autotile.png')
+      args.render_target(:tileset).sprites << DRT::Autotile.generate_tileset_47('sprites/grass-autotile.png')
       args.state.initialized[:tileset] = true
     else
       args.outputs.sprites << {

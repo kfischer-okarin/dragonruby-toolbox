@@ -225,6 +225,94 @@ module DRT
       (start...(start + 16)).to_a
     }.reverse
 
+    TILESET_47 = [
+      [
+        # 3x3 filled top row
+        bitmask(:left, :up, :right, :down_right, :down),
+        bitmask(:left, :down_left, :down, :down_right, :right),
+        bitmask(:right, :up, :left, :down_left, :down),
+        # 3x3 grid top row
+        bitmask(:right, :down),
+        bitmask(:left, :down, :right),
+        bitmask(:left, :down),
+        # vertical line top
+        bitmask(:down)
+      ],
+      [
+        # 3x3 filled middle row
+        bitmask(:up, :up_right, :right, :down_right, :down),
+        bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left),
+        bitmask(:up, :up_left, :left, :down_left, :down),
+        # 3x3 grid middle row
+        bitmask(:right, :up, :down),
+        bitmask(:left, :right, :up, :down),
+        bitmask(:left, :up, :down),
+        #vertical line middle
+        bitmask(:up, :down)
+      ],
+      [
+        # 3x3 filled bottom row
+        bitmask(:left, :down, :right, :up_right, :up),
+        bitmask(:left, :up_left, :up, :up_right, :right),
+        bitmask(:right, :down, :left, :up_left, :up),
+        # 3x3 grid bottom row
+        bitmask(:right, :up),
+        bitmask(:left, :up, :right),
+        bitmask(:left, :up),
+        # vertical line bottm
+        bitmask(:up)
+      ],
+      [
+        # 3x3 block with thin lines extruding - top
+        bitmask(:right, :down_right, :down),
+        bitmask(:left, :up, :right, :down_right, :down, :down_left),
+        bitmask(:left, :down_left, :down),
+        # 2x2 Shuriken A - top
+        bitmask(:left, :down, :down_right, :right),
+        bitmask(:up, :left, :down_left, :down),
+        # 2x2 Shuriken B - top
+        bitmask(:up, :down, :down_right, :right),
+        bitmask(:right, :left, :down_left, :down)
+
+      ],
+      [
+        # 3x3 block with thin lines extruding - middle
+        bitmask(:up, :left, :down, :down_right, :right, :up_right),
+        nil,
+        bitmask(:up, :right, :down, :down_left, :left, :up_left),
+        # 2x2 Shuriken A - bottom
+        bitmask(:down, :right, :up_right, :up),
+        bitmask(:right, :up, :up_left, :left),
+        # 2x2 Shuriken B - bottom
+        bitmask(:left, :right, :up_right, :up),
+        bitmask(:down, :up, :up_left, :left)
+      ],
+      [
+        # 3x3 block with thin lines extruding - top
+        bitmask(:right, :up_right, :up),
+        bitmask(:left, :down, :right, :up_right, :up, :up_left),
+        bitmask(:left, :up_left, :up),
+        # Fat Plus - top
+        bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left),
+        bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right),
+        # Diagonal gaps
+        bitmask(:up, :up_right, :right, :down, :down_left, :left),
+        bitmask(:up, :up_left, :left, :down, :down_right, :right)
+      ],
+      [
+        # horizontal line
+        bitmask(:right),
+        bitmask(:left, :right),
+        bitmask(:left),
+        # Fat Plus - bottom
+        bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left),
+        bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right),
+        nil,
+        # Single element
+        0
+      ]
+    ].reverse
+
     class TilesetBuilder
       def initialize(tile_size, tileset_definition)
         @tile_size = tile_size
@@ -235,6 +323,8 @@ module DRT
       def build(source)
         @tileset_definition.flat_map.with_index { |row, tile_y|
           row.map.with_index { |value, tile_x|
+            next unless value
+
             x = tile_x * @tile_size
             y = tile_y * @tile_size
             @tile_builder.generate(value).tap { |tile_parts|
@@ -251,6 +341,10 @@ module DRT
 
     def self.generate_full_tileset(autotile_source)
       TilesetBuilder.new(32, FULL_TILESET).build(autotile_source)
+    end
+
+    def self.generate_tileset_47(autotile_source)
+      TilesetBuilder.new(32, TILESET_47).build(autotile_source)
     end
   end
 end
