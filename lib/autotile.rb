@@ -222,29 +222,37 @@ module DRT
       end
     end
 
-    class FullTilesetBuilder
-      def initialize(tile_size)
+    FULL_TILESET = (0...16).map { |row|
+      start = row * 16
+      (start...(start + 16)).to_a
+    }.reverse
+
+    class TilesetBuilder
+      def initialize(tile_size, tileset_definition)
         @tile_size = tile_size
         @tile_builder = TileBuilder.new(tile_size)
+        @tileset_definition = tileset_definition
       end
 
-      def generate(source)
-        (0..255).flat_map { |value|
-          x = (value % 16) * @tile_size
-          y = (15 - value.idiv(16)) * @tile_size
-          @tile_builder.generate(value).tap { |tile_parts|
-            tile_parts.each do |part|
-              part[:x] += x
-              part[:y] += y
-              part[:path] = source
-            end
+      def build(source)
+        @tileset_definition.flat_map.with_index { |row, tile_y|
+          row.map.with_index { |value, tile_x|
+            x = tile_x * @tile_size
+            y = tile_y * @tile_size
+            @tile_builder.generate(value).tap { |tile_parts|
+              tile_parts.each do |part|
+                part[:x] += x
+                part[:y] += y
+                part[:path] = source
+              end
+            }
           }
         }
       end
     end
 
     def self.generate_full_tileset(autotile_source)
-      FullTilesetBuilder.new(32).generate(autotile_source)
+      TilesetBuilder.new(32, FULL_TILESET).build(autotile_source)
     end
   end
 end
