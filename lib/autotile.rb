@@ -13,19 +13,17 @@ module DRT
       [0, -1] => 0b00010000, [-1, 1] => 0b00100000, [-1, 0] => 0b01000000, [-1, 1] => 0b10000000
     }.freeze
 
-    def self.bitmask_for(value)
-      return value if value.is_a? Fixnum
-
-      if value.is_a?(Array)
-        case value[0]
-        when Array
-          return value.map { |v| VECTORS[v] }.inject(0) { |sum, n| sum + n }
-        when Symbol
-          return value.map { |v| SYMBOLS[v] }.inject(0) { |sum, n| sum + n }
-        end
+    def self.bitmask(*values)
+      case values[0]
+      when Fixnum
+        values[0]
+      when Array
+        values.map { |v| VECTORS[v] }.inject(0) { |sum, n| sum + n }
+      when Symbol
+        values.map { |v| SYMBOLS[v] }.inject(0) { |sum, n| sum + n }
+      else
+        raise "Value '#{values}' cannot be converted to bitmask"
       end
-
-      raise "Value '#{value}' cannot be converted to bitmask"
     end
 
     class Condition
@@ -39,7 +37,7 @@ module DRT
 
       class Has < Condition
         def initialize(directions)
-          @bitmask = Autotile.bitmask_for(directions)
+          @bitmask = Autotile.bitmask(*directions)
         end
 
         def matches?(value)
