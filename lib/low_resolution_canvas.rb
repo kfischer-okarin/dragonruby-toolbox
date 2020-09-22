@@ -1,3 +1,7 @@
+# Copyright (c) 2020 Kevin Fischer
+# https://github.com/kfischer-okarin/dragonruby-toolbox
+# Released under the MIT License (see repository)
+
 class LowResolutionCanvas
   attr_sprite
 

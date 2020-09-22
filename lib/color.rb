@@ -1,3 +1,7 @@
+# Copyright (c) 2020 Kevin Fischer
+# https://github.com/kfischer-okarin/dragonruby-toolbox
+# Released under the MIT License (see repository)
+
 class Color
   def initialize(r, g, b, a = nil)
     @color = [r, g, b, a || 255]
