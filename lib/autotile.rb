@@ -4,10 +4,12 @@
 
 module DRT
   module Autotile
+    # Map from direction name to bitmask
     SYMBOLS = {
       up: 0b00000001, up_right: 0b00000010, right: 0b00000100, down_right: 0b00001000,
       down: 0b00010000, down_left: 0b00100000, left: 0b01000000, up_left: 0b10000000
     }.freeze
+    # Map from vector to bitmask
     VECTORS = {
       [0, 1] => 0b00000001, [1, 1] => 0b00000010, [1, 0] => 0b00000100, [1, -1] => 0b00001000,
       [0, -1] => 0b00010000, [-1, 1] => 0b00100000, [-1, 0] => 0b01000000, [-1, 1] => 0b10000000
@@ -26,6 +28,7 @@ module DRT
       end
     end
 
+    # ============ Bitmask Conditions start ============
     class Condition
       def and(condition)
         Condition::And.new(self, condition)
@@ -68,7 +71,7 @@ module DRT
       end
     end
 
-    class << self
+    module ConditionHelpers
       def has(*directions)
         Condition::Has.new(directions)
       end
@@ -78,104 +81,118 @@ module DRT
       end
     end
 
-    TILE_PARTS = {
-      [0, 0] => {
-        corner: :up_left,
+    # ============ Bitmask Conditions end ============
+
+    # Definition of tile parts that will make up the tiles in the end
+    module TileParts
+      extend ConditionHelpers
+
+      SINGLE_UP_LEFT = {
+        tile_corner: :up_left,
         condition: has_not(:up, :left).and(has_not(:right).or(has_not(:down)))
-      },
-      [1, 0] => {
-        corner: :up_right,
+      }
+      SINGLE_UP_RIGHT = {
+        tile_corner: :up_right,
         condition: has_not(:up, :right).and(has_not(:left).or(has_not(:down)))
-      },
-      [2, 0] => {
-        corner: :up_left,
+      }
+      PLUS_UP_LEFT = {
+        tile_corner: :up_left,
         condition: has(:up, :left).and(has_not(:up_left))
-      },
-      [3, 0] => {
-        corner: :up_right,
+      }
+      PLUS_UP_RIGHT = {
+        tile_corner: :up_right,
         condition: has(:up, :right).and(has_not(:up_right))
-      },
-      [0, 1] => {
-        corner: :down_left,
+      }
+      SINGLE_DOWN_LEFT = {
+        tile_corner: :down_left,
         condition: has_not(:down, :left).and(has_not(:right).or(has_not(:up)))
-      },
-      [1, 1] => {
-        corner: :down_right,
+      }
+      SINGLE_DOWN_RIGHT = {
+        tile_corner: :down_right,
         condition: has_not(:down, :right).and(has_not(:left).or(has_not(:up)))
-      },
-      [2, 1] => {
-        corner: :down_left,
+      }
+      PLUS_DOWN_LEFT = {
+        tile_corner: :down_left,
         condition: has(:down, :left).and(has_not(:down_left))
-      },
-      [3, 1] => {
-        corner: :down_right,
+      }
+      PLUS_DOWN_RIGHT = {
+        tile_corner: :down_right,
         condition: has(:down, :right).and(has_not(:down_right))
-      },
-      [0, 2] => {
-        corner: :up_left,
+      }
+      CORNER_UP_LEFT = {
+        tile_corner: :up_left,
         condition: has_not(:up, :left).and(has(:right, :down))
-      },
-      [1, 2] => {
-        corner: :up_right,
+      }
+      UP_LEFT = {
+        tile_corner: :up_right,
         condition: has_not(:up).and(has(:right))
-      },
-      [2, 2] => {
-        corner: :up_left,
+      }
+      UP_RIGHT = {
+        tile_corner: :up_left,
         condition: has_not(:up).and(has(:left))
-      },
-      [3, 2] => {
-        corner: :up_right,
+      }
+      CORNER_UP_RIGHT = {
+        tile_corner: :up_right,
         condition: has_not(:up, :right).and(has(:left, :down))
-      },
-      [0, 3] => {
-        corner: :down_left,
+      }
+      LEFT_UP = {
+        tile_corner: :down_left,
         condition: has_not(:left).and(has(:down))
-      },
-      [1, 3] => {
-        corner: :down_right,
+      }
+      CENTER_UP_LEFT = {
+        tile_corner: :down_right,
         condition: has(:right, :down, :down_right)
-      },
-      [2, 3] => {
-        corner: :down_left,
+      }
+      CENTER_UP_RIGHT = {
+        tile_corner: :down_left,
         condition: has(:left, :down, :down_left)
-      },
-      [3, 3] => {
-        corner: :down_right,
+      }
+      RIGHT_UP = {
+        tile_corner: :down_right,
         condition: has_not(:right).and(has(:down))
-      },
-      [0, 4] => {
-        corner: :up_left,
+      }
+      LEFT_DOWN = {
+        tile_corner: :up_left,
         condition: has_not(:left).and(has(:up))
-      },
-      [1, 4] => {
-        corner: :up_right,
+      }
+      CENTER_DOWN_LEFT = {
+        tile_corner: :up_right,
         condition: has(:right, :up, :up_right)
-      },
-      [2, 4] => {
-        corner: :up_left,
+      }
+      CENTER_DOWN_RIGHT = {
+        tile_corner: :up_left,
         condition: has(:left, :up, :up_left)
-      },
-      [3, 4] => {
-        corner: :up_right,
+      }
+      RIGHT_DOWN = {
+        tile_corner: :up_right,
         condition: has_not(:right).and(has(:up))
-      },
-      [0, 5] => {
-        corner: :down_left,
+      }
+      CORNER_DOWN_LEFT = {
+        tile_corner: :down_left,
         condition: has_not(:down, :left).and(has(:right, :up))
-      },
-      [1, 5] => {
-        corner: :down_right,
+      }
+      DOWN_LEFT = {
+        tile_corner: :down_right,
         condition: has_not(:down).and(has(:right))
-      },
-      [2, 5] => {
-        corner: :down_left,
+      }
+      DOWN_RIGHT = {
+        tile_corner: :down_left,
         condition: has_not(:down).and(has(:left))
-      },
-      [3, 5] => {
-        corner: :down_right,
+      }
+      CORNER_DOWN_RIGHT = {
+        tile_corner: :down_right,
         condition: has_not(:down, :right).and(has(:left, :up))
       }
-    }
+
+      PARTS = [
+        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT],
+        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT],
+        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT],
+        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP],
+        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN],
+        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT]
+      ]
+    end
 
     class TileBuilder
       def initialize(tile_size)
@@ -199,18 +216,22 @@ module DRT
       private
 
       def definitions_for(corner)
-        TILE_PARTS.select { |tile_coord, definition|
-          definition[:corner] == corner
-        }.map { |tile_coord, definition|
-          {
-            condition: definition[:condition],
-            sprite: {
-              tile_x: @part_size * tile_coord.x,
-              tile_y: @part_size * tile_coord.y,
-              tile_w: @part_size,
-              tile_h: @part_size,
-            }
-          }
+        [].tap { |result|
+          TileParts::PARTS.each.with_index do |row, y|
+            row.each.with_index do |definition, x|
+              next unless definition[:tile_corner] == corner
+
+              result << {
+                condition: definition[:condition],
+                sprite: {
+                  tile_x: @part_size * x,
+                  tile_y: @part_size * y,
+                  tile_w: @part_size,
+                  tile_h: @part_size,
+                }
+              }
+            end
+          end
         }
       end
 
