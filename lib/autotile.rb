@@ -248,66 +248,207 @@ module DRT
     module Tiles
       extend BitmaskHelper
 
-      CORNER_UP_LEFT = bitmask(:right, :down_right, :down)
-      CORNER_UP_RIGHT = bitmask(:left, :down_left, :down)
-      CORNER_DOWN_LEFT = bitmask(:right, :up_right, :up)
-      CORNER_DOWN_RIGHT = bitmask(:left, :up_left, :up)
+      CORNER_UP_LEFT = {
+        value: bitmask(:right, :down_right, :down),
+        forbidden: bitmask(:up, :left)
+      }
+      CORNER_UP_RIGHT = {
+        value: bitmask(:left, :down_left, :down),
+        forbidden: bitmask(:up, :right)
+      }
+      CORNER_DOWN_LEFT = {
+        value: bitmask(:right, :up_right, :up),
+        forbidden: bitmask(:down, :left)
+      }
+      CORNER_DOWN_RIGHT = {
+        value: bitmask(:left, :up_left, :up),
+        forbidden: bitmask(:down, :right)
+      }
 
-      SIDE_UP = bitmask(:left, :down_left, :down, :down_right, :right)
-      SIDE_DOWN = bitmask(:left, :up_left, :up, :up_right, :right)
-      SIDE_LEFT = bitmask(:up, :up_right, :right, :down_right, :down)
-      SIDE_RIGHT = bitmask(:up, :up_left, :left, :down_left, :down)
+      SIDE_UP = {
+        value: bitmask(:left, :down_left, :down, :down_right, :right),
+        forbidden: bitmask(:up)
+      }
+      SIDE_DOWN = {
+        value: bitmask(:left, :up_left, :up, :up_right, :right),
+        forbidden: bitmask(:down)
+      }
+      SIDE_LEFT = {
+        value: bitmask(:up, :up_right, :right, :down_right, :down),
+        forbidden: bitmask(:left)
+      }
+      SIDE_RIGHT = {
+        value: bitmask(:up, :up_left, :left, :down_left, :down),
+        forbidden: bitmask(:right)
+      }
 
-      CENTER = bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
+      CENTER = {
+        value: bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left),
+        forbidden: 0
+      }
 
-      CORNER_UP_LEFT_LINE_LEFT = bitmask(:left, :down, :down_right, :right)
-      CORNER_UP_LEFT_LINE_UP = bitmask(:up, :down, :down_right, :right)
-      CORNER_UP_RIGHT_LINE_UP = bitmask(:up, :left, :down_left, :down)
-      CORNER_UP_RIGHT_LINE_RIGHT = bitmask(:right, :left, :down_left, :down)
-      CORNER_DOWN_LEFT_LINE_DOWN = bitmask(:down, :right, :up_right, :up)
-      CORNER_DOWN_LEFT_LINE_LEFT = bitmask(:left, :right, :up_right, :up)
-      CORNER_DOWN_RIGHT_LINE_RIGHT = bitmask(:right, :up, :up_left, :left)
-      CORNER_DOWN_RIGHT_LINE_DOWN = bitmask(:down, :up, :up_left, :left)
+      CORNER_UP_LEFT_LINE_LEFT = {
+        value: bitmask(:left, :down, :down_right, :right),
+        forbidden: bitmask(:up_left, :down_left, :up)
+      }
+      CORNER_UP_LEFT_LINE_UP = {
+        value: bitmask(:up, :down, :down_right, :right),
+        forbidden: bitmask(:up_left, :up_right, :left)
+      }
+      CORNER_UP_RIGHT_LINE_UP = {
+        value: bitmask(:up, :left, :down_left, :down),
+        forbidden: bitmask(:up_right, :up_left, :right)
+      }
+      CORNER_UP_RIGHT_LINE_RIGHT = {
+        value: bitmask(:right, :left, :down_left, :down),
+        forbidden: bitmask(:up_right, :down_right, :up)
+      }
+      CORNER_DOWN_LEFT_LINE_DOWN = {
+        value: bitmask(:down, :right, :up_right, :up),
+        forbidden: bitmask(:down_left, :down_right, :left)
+      }
+      CORNER_DOWN_LEFT_LINE_LEFT = {
+        value: bitmask(:left, :right, :up_right, :up),
+        forbidden: bitmask(:up_left, :down_left, :down)
+      }
+      CORNER_DOWN_RIGHT_LINE_RIGHT = {
+        value: bitmask(:right, :up, :up_left, :left),
+        forbidden: bitmask(:up_right, :down_right, :down)
+      }
+      CORNER_DOWN_RIGHT_LINE_DOWN = {
+        value: bitmask(:down, :up, :up_left, :left),
+        forbidden: bitmask(:down_left, :down_right, :right)
+      }
 
-      CORNER_UP_LEFT_TWO_LINES = bitmask(:left, :up, :right, :down_right, :down)
-      CORNER_UP_RIGHT_TWO_LINES = bitmask(:right, :up, :left, :down_left, :down)
-      CORNER_DOWN_LEFT_TWO_LINES = bitmask(:left, :down, :right, :up_right, :up)
-      CORNER_DOWN_RIGHT_TWO_LINES = bitmask(:right, :down, :left, :up_left, :up)
+      CORNER_UP_LEFT_TWO_LINES = {
+        value: bitmask(:left, :up, :right, :down_right, :down),
+        forbidden: bitmask(:up_left, :up_right, :down_left)
+      }
+      CORNER_UP_RIGHT_TWO_LINES = {
+        value: bitmask(:right, :up, :left, :down_left, :down),
+        forbidden: bitmask(:up_left, :up_right, :down_right)
+      }
+      CORNER_DOWN_LEFT_TWO_LINES = {
+        value: bitmask(:left, :down, :right, :up_right, :up),
+        forbidden: bitmask(:up_left, :down_left, :down_right)
+      }
+      CORNER_DOWN_RIGHT_TWO_LINES = {
+        value: bitmask(:right, :down, :left, :up_left, :up),
+        forbidden: bitmask(:up_right, :down_right, :down_left)
+      }
 
-      SIDE_UP_LINE = bitmask(:left, :up, :right, :down_right, :down, :down_left)
-      SIDE_LEFT_LINE = bitmask(:up, :left, :down, :down_right, :right, :up_right)
-      SIDE_RIGHT_LINE = bitmask(:up, :right, :down, :down_left, :left, :up_left)
-      SIDE_DOWN_LINE = bitmask(:left, :down, :right, :up_right, :up, :up_left)
+      SIDE_UP_LINE = {
+        value: bitmask(:left, :up, :right, :down_right, :down, :down_left),
+        forbidden: bitmask(:up_left, :up_right)
+      }
+      SIDE_LEFT_LINE = {
+        value: bitmask(:up, :left, :down, :down_right, :right, :up_right),
+        forbidden: bitmask(:up_left, :down_left)
+      }
+      SIDE_RIGHT_LINE = {
+        value: bitmask(:up, :right, :down, :down_left, :left, :up_left),
+        forbidden: bitmask(:up_right, :down_right)
+      }
+      SIDE_DOWN_LINE = {
+        value: bitmask(:left, :down, :right, :up_right, :up, :up_left),
+        forbidden: bitmask(:down_left, :down_right)
+      }
 
-      L_DOWN_RIGHT = bitmask(:right, :down)
-      L_DOWN_LEFT = bitmask(:left, :down)
-      L_UP_RIGHT = bitmask(:right, :up)
-      L_UP_LEFT = bitmask(:left, :up)
+      L_DOWN_RIGHT = {
+        value: bitmask(:right, :down),
+        forbidden: bitmask(:left, :up, :down_right)
+      }
+      L_DOWN_LEFT = {
+        value: bitmask(:left, :down),
+        forbidden: bitmask(:up, :right, :down_left)
+      }
+      L_UP_RIGHT = {
+        value: bitmask(:right, :up),
+        forbidden: bitmask(:left, :down, :up_right)
+      }
+      L_UP_LEFT = {
+        value: bitmask(:left, :up),
+        forbidden: bitmask(:right, :down, :up_left)
+      }
 
-      T_DOWN_LEFT_RIGHT = bitmask(:left, :down, :right)
-      T_UP_DOWN_RIGHT = bitmask(:right, :up, :down)
-      T_UP_DOWN_LEFT = bitmask(:left, :up, :down)
-      T_UP_LEFT_RIGHT = bitmask(:left, :up, :right)
+      T_DOWN_LEFT_RIGHT = {
+        value: bitmask(:left, :down, :right),
+        forbidden: bitmask(:up, :down_left, :down_right)
+      }
+      T_UP_DOWN_RIGHT = {
+        value: bitmask(:right, :up, :down),
+        forbidden: bitmask(:left, :up_right, :down_right)
+      }
+      T_UP_DOWN_LEFT = {
+        value: bitmask(:left, :up, :down),
+        forbidden: bitmask(:right, :up_left, :down_left)
+      }
+      T_UP_LEFT_RIGHT = {
+        value: bitmask(:left, :up, :right),
+        forbidden: bitmask(:down, :up_left, :up_right)
+      }
 
-      PLUS = bitmask(:left, :right, :up, :down)
+      PLUS = {
+        value: bitmask(:left, :right, :up, :down),
+        forbidden: bitmask(:up_left, :up_right, :down_left, :down_right)
+      }
 
-      FAT_PLUS_UP_LEFT = bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left)
-      FAT_PLUS_UP_RIGHT = bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right)
-      FAT_PLUS_DOWN_LEFT = bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left)
-      FAT_PLUS_DOWN_RIGHT = bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right)
+      FAT_PLUS_UP_LEFT = {
+        value: bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left),
+        forbidden: bitmask(:up_left)
+      }
+      FAT_PLUS_UP_RIGHT = {
+        value: bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right),
+        forbidden: bitmask(:up_right)
+      }
+      FAT_PLUS_DOWN_LEFT = {
+        value: bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left),
+        forbidden: bitmask(:down_left)
+      }
+      FAT_PLUS_DOWN_RIGHT = {
+        value: bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right),
+        forbidden: bitmask(:down_right)
+      }
 
-      DIAGONAL_CONNECT_RIGHT = bitmask(:up, :up_right, :right, :down, :down_left, :left)
-      DIAGONAL_CONNECT_LEFT = bitmask(:up, :up_left, :left, :down, :down_right, :right)
+      DIAGONAL_CONNECT_RIGHT = {
+        value: bitmask(:up, :up_right, :right, :down, :down_left, :left),
+        forbidden: bitmask(:up_left, :down_right)
+      }
+      DIAGONAL_CONNECT_LEFT = {
+        value: bitmask(:up, :up_left, :left, :down, :down_right, :right),
+        forbidden: bitmask(:up_right, :down_left)
+      }
 
-      VERTICAL_LINE_END_UP = bitmask(:down)
-      VERTICAL_LINE = bitmask(:up, :down)
-      VERTICAL_LINE_END_DOWN = bitmask(:up)
+      VERTICAL_LINE_END_UP = {
+        value: bitmask(:down),
+        forbidden: bitmask(:up, :left, :right)
+      }
+      VERTICAL_LINE = {
+        value: bitmask(:up, :down),
+        forbidden: bitmask(:left, :right)
+      }
+      VERTICAL_LINE_END_DOWN = {
+        value: bitmask(:up),
+        forbidden: bitmask(:left, :down, :right)
+      }
 
-      HORIZONTAL_LINE_END_LEFT = bitmask(:right)
-      HORIZONTAL_LINE = bitmask(:left, :right)
-      HORIZONTAL_LINE_END_RIGHT = bitmask(:left)
+      HORIZONTAL_LINE_END_LEFT = {
+        value: bitmask(:right),
+        forbidden: bitmask(:up, :left, :down)
+      }
+      HORIZONTAL_LINE = {
+        value: bitmask(:left, :right),
+        forbidden: bitmask(:up, :down)
+      }
+      HORIZONTAL_LINE_END_RIGHT = {
+        value: bitmask(:left),
+        forbidden: bitmask(:up, :right, :down)
+      }
 
-      NO_NEIGHBORS = 0
+      NO_NEIGHBORS = {
+        value: 0,
+        forbidden: bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
+      }
 
       TILESET_47 = [
         [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP],
@@ -334,12 +475,12 @@ module DRT
 
       def build(source)
         @tileset_definition.reverse.flat_map.with_index { |row, tile_y|
-          row.map.with_index { |value, tile_x|
-            next unless value
+          row.map.with_index { |tile, tile_x|
+            next unless tile
 
             x = tile_x * @tile_size
             y = tile_y * @tile_size
-            @tile_builder.generate(value).tap { |tile_parts|
+            @tile_builder.generate(tile[:value]).tap { |tile_parts|
               tile_parts.each do |part|
                 part[:x] += x
                 part[:y] += y
