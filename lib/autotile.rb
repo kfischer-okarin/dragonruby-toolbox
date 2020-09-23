@@ -28,7 +28,7 @@ module DRT
       end
     end
 
-    # ============ Bitmask Conditions start ============
+    # Bitmask conditions
     class Condition
       def and(condition)
         Condition::And.new(self, condition)
@@ -38,6 +38,7 @@ module DRT
         Condition::Or.new(self, condition)
       end
 
+      # Bitmask has all specified direction bits set
       class Has < Condition
         def initialize(directions)
           @bitmask = Autotile.bitmask(*directions)
@@ -48,6 +49,7 @@ module DRT
         end
       end
 
+      # Bitmask has none of the specified direction bits set
       class HasNot < Has
         def matches?(value)
           @bitmask & value == 0
@@ -69,23 +71,21 @@ module DRT
           @conditions.any? { |c| c.matches? value }
         end
       end
-    end
 
-    module ConditionHelpers
-      def has(*directions)
-        Condition::Has.new(directions)
+      module Helpers
+        def has(*directions)
+          Has.new(directions)
+        end
+
+        def has_not(*directions)
+          HasNot.new(directions)
+        end
       end
-
-      def has_not(*directions)
-        Condition::HasNot.new(directions)
-      end
     end
-
-    # ============ Bitmask Conditions end ============
 
     # Definition of tile parts that will make up the tiles in the end
     module TileParts
-      extend ConditionHelpers
+      extend Condition::Helpers
 
       SINGLE_UP_LEFT = {
         tile_corner: :up_left,
