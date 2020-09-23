@@ -192,15 +192,35 @@ module DRT
         [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN],
         [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT]
       ]
+
+      def self.definitions_for(corner, part_size)
+        [].tap { |result|
+          PARTS.each.with_index do |row, y|
+            row.each.with_index do |definition, x|
+              next unless definition[:tile_corner] == corner
+
+              result << {
+                condition: definition[:condition],
+                sprite: {
+                  tile_x: part_size * x,
+                  tile_y: part_size * y,
+                  tile_w: part_size,
+                  tile_h: part_size,
+                }
+              }
+            end
+          end
+        }
+      end
     end
 
     class TileBuilder
       def initialize(tile_size)
         @part_size = tile_size.idiv 2
-        @up_left = definitions_for(:up_left)
-        @up_right = definitions_for(:up_right)
-        @down_left = definitions_for(:down_left)
-        @down_right = definitions_for(:down_right)
+        @up_left = TileParts.definitions_for(:up_left, @part_size)
+        @up_right = TileParts.definitions_for(:up_right, @part_size)
+        @down_left = TileParts.definitions_for(:down_left, @part_size)
+        @down_right = TileParts.definitions_for(:down_right, @part_size)
       end
 
       def generate(value)
@@ -214,26 +234,6 @@ module DRT
       end
 
       private
-
-      def definitions_for(corner)
-        [].tap { |result|
-          TileParts::PARTS.each.with_index do |row, y|
-            row.each.with_index do |definition, x|
-              next unless definition[:tile_corner] == corner
-
-              result << {
-                condition: definition[:condition],
-                sprite: {
-                  tile_x: @part_size * x,
-                  tile_y: @part_size * y,
-                  tile_w: @part_size,
-                  tile_h: @part_size,
-                }
-              }
-            end
-          end
-        }
-      end
 
       def matching_part(definitions, value)
         matched = definitions.find { |definition| definition[:condition].matches? value }
