@@ -447,7 +447,7 @@ module DRT
 
       NO_NEIGHBORS = {
         value: 0,
-        forbidden: bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
+        forbidden: bitmask(:up, :down, :right, :left)
       }
 
       TILESET_47 = [
