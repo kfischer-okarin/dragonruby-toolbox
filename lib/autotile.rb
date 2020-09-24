@@ -458,6 +458,15 @@ module DRT
     class Tileset
       def initialize(tiles)
         @tiles = tiles
+
+        @tile_positions = (0..255).map { |neighborhood_bitmask|
+          tile = tiles_with_condition.find { |tile| tile[:condition].matches? neighborhood_bitmask }
+          [neighborhood_bitmask, tile[:position]].freeze
+        }.to_h
+      end
+
+      def tile_position_for(neighborhood_bitmask)
+        @tile_positions[neighborhood_bitmask]
       end
 
       def build_from(tile_source)
@@ -479,10 +488,60 @@ module DRT
           }
         }
       end
+
+      private
+
+      def tiles_with_condition
+        @tiles_with_condition ||= @tiles.reverse.flat_map.with_index { |row, y|
+          row.map.with_index { |tile, x|
+            next nil unless tile
+
+            {
+              position: [x, y],
+              condition: tile[:condition] || Tileset.condition_for(tile)
+            }
+          }
+        }.compact
+      end
+
+      def self.condition_for(tile)
+        has_all_required_bits = Condition::Has.new(tile[:value])
+        has_no_excluded_bits = Condition::HasNot.new(tile[:forbidden] || 255 - tile[:value])
+        has_all_required_bits.and(has_no_excluded_bits)
+      end
     end
 
     TILESET_47 = Tileset.new Tiles::TILESET_47
     FULL_TILESET = Tileset.new Tiles::FULL_TILESET
+
+    class Tile
+      def initialize(path, size, tileset = nil)
+        @path = path
+        @size = size
+        @sprites = calc_sprites(tileset || TILESET_47)
+      end
+
+      def render(neighborhood_bitmask)
+        @sprites[neighborhood_bitmask]
+      end
+
+      private
+
+      def calc_sprites(tileset)
+        tiles = {}
+        (0..255).map { |neighborhood_bitmask|
+          tile_position = tileset.tile_position_for(neighborhood_bitmask)
+          tiles[tile_position] ||= {
+            path: @path,
+            source_x: tile_position.x * @size,
+            source_y: tile_position.y * @size,
+            source_w: @size,
+            source_h: @size
+          }.freeze
+          [neighborhood_bitmask, tiles[tile_position]]
+        }.to_h
+      end
+    end
 
     def self.generate_full_tileset(tile_source)
       FULL_TILESET.build_from(tile_source)

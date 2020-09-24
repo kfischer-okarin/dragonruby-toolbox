@@ -8,10 +8,11 @@ class AutotileExample
     if !args.state.initialized[:tileset]
       args.render_target(:tileset).sprites << DRT::Autotile.generate_tileset_47(GRASS_AUTOTILE)
       args.state.initialized[:tileset] = true
+      args.state.tile = DRT::Autotile::Tile.new(:tileset, GRASS_AUTOTILE.size)
     else
-      args.outputs.sprites << {
-        x: 0, y: 0, w: 512, h: 512, source_w: 512, source_h: 512, source_x: 0, source_y: 0, path: :tileset
-      }
+      args.outputs.sprites << [
+        args.state.tile.render(0b01010101)
+      ]
     end
   end
 end
