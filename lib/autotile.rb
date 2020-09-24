@@ -289,35 +289,35 @@ module DRT
 
       CORNER_UP_LEFT_LINE_LEFT = {
         value: bitmask(:left, :down, :down_right, :right),
-        forbidden: bitmask(:up_left, :down_left, :up)
+        forbidden: bitmask(:down_left, :up)
       }
       CORNER_UP_LEFT_LINE_UP = {
         value: bitmask(:up, :down, :down_right, :right),
-        forbidden: bitmask(:up_left, :up_right, :left)
+        forbidden: bitmask(:up_right, :left)
       }
       CORNER_UP_RIGHT_LINE_UP = {
         value: bitmask(:up, :left, :down_left, :down),
-        forbidden: bitmask(:up_right, :up_left, :right)
+        forbidden: bitmask(:up_left, :right)
       }
       CORNER_UP_RIGHT_LINE_RIGHT = {
         value: bitmask(:right, :left, :down_left, :down),
-        forbidden: bitmask(:up_right, :down_right, :up)
+        forbidden: bitmask(:down_right, :up)
       }
       CORNER_DOWN_LEFT_LINE_DOWN = {
         value: bitmask(:down, :right, :up_right, :up),
-        forbidden: bitmask(:down_left, :down_right, :left)
+        forbidden: bitmask(:down_right, :left)
       }
       CORNER_DOWN_LEFT_LINE_LEFT = {
         value: bitmask(:left, :right, :up_right, :up),
-        forbidden: bitmask(:up_left, :down_left, :down)
+        forbidden: bitmask(:up_left, :down)
       }
       CORNER_DOWN_RIGHT_LINE_RIGHT = {
         value: bitmask(:right, :up, :up_left, :left),
-        forbidden: bitmask(:up_right, :down_right, :down)
+        forbidden: bitmask(:up_right, :down)
       }
       CORNER_DOWN_RIGHT_LINE_DOWN = {
         value: bitmask(:down, :up, :up_left, :left),
-        forbidden: bitmask(:down_left, :down_right, :right)
+        forbidden: bitmask(:down_left, :right)
       }
 
       CORNER_UP_LEFT_TWO_LINES = {
