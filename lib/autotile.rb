@@ -15,8 +15,8 @@ module DRT
       [0, -1] => 0b00010000, [-1, -1] => 0b00100000, [-1, 0] => 0b01000000, [-1, 1] => 0b10000000
     }.freeze
 
-    module BitmaskHelper
-      def bitmask(*values)
+    module Bitmask
+      def self.from(*values)
         case values[0]
         when Fixnum
           values[0]
@@ -28,68 +28,65 @@ module DRT
           raise "Value '#{values}' cannot be converted to bitmask"
         end
       end
-    end
 
-    extend BitmaskHelper
-
-    # Bitmask conditions
-    class Condition
-      def and(condition)
-        Condition::And.new(self, condition)
-      end
-
-      def or(condition)
-        Condition::Or.new(self, condition)
-      end
-
-      # Bitmask has all specified direction bits set
-      class Has < Condition
-        def initialize(directions)
-          @bitmask = directions.is_a?(Fixnum) ? directions : Autotile.bitmask(*directions)
+      class Condition
+        def and(condition)
+          And.new(self, condition)
         end
 
-        def matches?(value)
-          @bitmask & value == @bitmask
-        end
-      end
-
-      # Bitmask has none of the specified direction bits set
-      class HasNot < Has
-        def matches?(value)
-          @bitmask & value == 0
-        end
-      end
-
-      class And < Condition
-        def initialize(*conditions)
-          @conditions = conditions
+        def or(condition)
+          Or.new(self, condition)
         end
 
-        def matches?(value)
-          @conditions.all? { |c| c.matches? value }
-        end
-      end
+        # Bitmask has all specified direction bits set
+        class Has < Condition
+          def initialize(directions)
+            @bitmask = directions.is_a?(Fixnum) ? directions : Bitmask.from(*directions)
+          end
 
-      class Or < And
-        def matches?(value)
-          @conditions.any? { |c| c.matches? value }
-        end
-      end
-
-      module Helpers
-        def has(*directions)
-          Has.new(directions)
+          def matches?(value)
+            @bitmask & value == @bitmask
+          end
         end
 
-        def has_not(*directions)
-          HasNot.new(directions)
+        # Bitmask has none of the specified direction bits set
+        class HasNot < Has
+          def matches?(value)
+            @bitmask & value == 0
+          end
+        end
+
+        class And < Condition
+          def initialize(*conditions)
+            @conditions = conditions
+          end
+
+          def matches?(value)
+            @conditions.all? { |c| c.matches? value }
+          end
+        end
+
+        class Or < And
+          def matches?(value)
+            @conditions.any? { |c| c.matches? value }
+          end
+        end
+
+        module Helpers
+          def has(*directions)
+            Has.new(directions)
+          end
+
+          def has_not(*directions)
+            HasNot.new(directions)
+          end
         end
       end
     end
 
     # Definition of tile parts that will make up the tiles in the end
     module TileParts
-      extend Condition::Helpers
+      extend Bitmask::Condition::Helpers
 
       SINGLE_UP_LEFT = {
         tile_corner: :up_left,
@@ -246,192 +243,190 @@ module DRT
     end
 
     module Tiles
-      extend BitmaskHelper
-
       CORNER_UP_LEFT = {
-        value: bitmask(:right, :down_right, :down),
-        forbidden: bitmask(:up, :left)
+        value: Bitmask.from(:right, :down_right, :down),
+        forbidden: Bitmask.from(:up, :left)
       }
       CORNER_UP_RIGHT = {
-        value: bitmask(:left, :down_left, :down),
-        forbidden: bitmask(:up, :right)
+        value: Bitmask.from(:left, :down_left, :down),
+        forbidden: Bitmask.from(:up, :right)
       }
       CORNER_DOWN_LEFT = {
-        value: bitmask(:right, :up_right, :up),
-        forbidden: bitmask(:down, :left)
+        value: Bitmask.from(:right, :up_right, :up),
+        forbidden: Bitmask.from(:down, :left)
       }
       CORNER_DOWN_RIGHT = {
-        value: bitmask(:left, :up_left, :up),
-        forbidden: bitmask(:down, :right)
+        value: Bitmask.from(:left, :up_left, :up),
+        forbidden: Bitmask.from(:down, :right)
       }
 
       SIDE_UP = {
-        value: bitmask(:left, :down_left, :down, :down_right, :right),
-        forbidden: bitmask(:up)
+        value: Bitmask.from(:left, :down_left, :down, :down_right, :right),
+        forbidden: Bitmask.from(:up)
       }
       SIDE_DOWN = {
-        value: bitmask(:left, :up_left, :up, :up_right, :right),
-        forbidden: bitmask(:down)
+        value: Bitmask.from(:left, :up_left, :up, :up_right, :right),
+        forbidden: Bitmask.from(:down)
       }
       SIDE_LEFT = {
-        value: bitmask(:up, :up_right, :right, :down_right, :down),
-        forbidden: bitmask(:left)
+        value: Bitmask.from(:up, :up_right, :right, :down_right, :down),
+        forbidden: Bitmask.from(:left)
       }
       SIDE_RIGHT = {
-        value: bitmask(:up, :up_left, :left, :down_left, :down),
-        forbidden: bitmask(:right)
+        value: Bitmask.from(:up, :up_left, :left, :down_left, :down),
+        forbidden: Bitmask.from(:right)
       }
 
       CENTER = {
-        value: bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
+        value: Bitmask.from(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
       }
 
       CORNER_UP_LEFT_LINE_LEFT = {
-        value: bitmask(:left, :down, :down_right, :right),
-        forbidden: bitmask(:down_left, :up)
+        value: Bitmask.from(:left, :down, :down_right, :right),
+        forbidden: Bitmask.from(:down_left, :up)
       }
       CORNER_UP_LEFT_LINE_UP = {
-        value: bitmask(:up, :down, :down_right, :right),
-        forbidden: bitmask(:up_right, :left)
+        value: Bitmask.from(:up, :down, :down_right, :right),
+        forbidden: Bitmask.from(:up_right, :left)
       }
       CORNER_UP_RIGHT_LINE_UP = {
-        value: bitmask(:up, :left, :down_left, :down),
-        forbidden: bitmask(:up_left, :right)
+        value: Bitmask.from(:up, :left, :down_left, :down),
+        forbidden: Bitmask.from(:up_left, :right)
       }
       CORNER_UP_RIGHT_LINE_RIGHT = {
-        value: bitmask(:right, :left, :down_left, :down),
-        forbidden: bitmask(:down_right, :up)
+        value: Bitmask.from(:right, :left, :down_left, :down),
+        forbidden: Bitmask.from(:down_right, :up)
       }
       CORNER_DOWN_LEFT_LINE_DOWN = {
-        value: bitmask(:down, :right, :up_right, :up),
-        forbidden: bitmask(:down_right, :left)
+        value: Bitmask.from(:down, :right, :up_right, :up),
+        forbidden: Bitmask.from(:down_right, :left)
       }
       CORNER_DOWN_LEFT_LINE_LEFT = {
-        value: bitmask(:left, :right, :up_right, :up),
-        forbidden: bitmask(:up_left, :down)
+        value: Bitmask.from(:left, :right, :up_right, :up),
+        forbidden: Bitmask.from(:up_left, :down)
       }
       CORNER_DOWN_RIGHT_LINE_RIGHT = {
-        value: bitmask(:right, :up, :up_left, :left),
-        forbidden: bitmask(:up_right, :down)
+        value: Bitmask.from(:right, :up, :up_left, :left),
+        forbidden: Bitmask.from(:up_right, :down)
       }
       CORNER_DOWN_RIGHT_LINE_DOWN = {
-        value: bitmask(:down, :up, :up_left, :left),
-        forbidden: bitmask(:down_left, :right)
+        value: Bitmask.from(:down, :up, :up_left, :left),
+        forbidden: Bitmask.from(:down_left, :right)
       }
 
       CORNER_UP_LEFT_TWO_LINES = {
-        value: bitmask(:left, :up, :right, :down_right, :down)
+        value: Bitmask.from(:left, :up, :right, :down_right, :down)
       }
       CORNER_UP_RIGHT_TWO_LINES = {
-        value: bitmask(:right, :up, :left, :down_left, :down)
+        value: Bitmask.from(:right, :up, :left, :down_left, :down)
       }
       CORNER_DOWN_LEFT_TWO_LINES = {
-        value: bitmask(:left, :down, :right, :up_right, :up)
+        value: Bitmask.from(:left, :down, :right, :up_right, :up)
       }
       CORNER_DOWN_RIGHT_TWO_LINES = {
-        value: bitmask(:right, :down, :left, :up_left, :up)
+        value: Bitmask.from(:right, :down, :left, :up_left, :up)
       }
 
       SIDE_UP_LINE = {
-        value: bitmask(:left, :up, :right, :down_right, :down, :down_left)
+        value: Bitmask.from(:left, :up, :right, :down_right, :down, :down_left)
       }
       SIDE_LEFT_LINE = {
-        value: bitmask(:up, :left, :down, :down_right, :right, :up_right)
+        value: Bitmask.from(:up, :left, :down, :down_right, :right, :up_right)
       }
       SIDE_RIGHT_LINE = {
-        value: bitmask(:up, :right, :down, :down_left, :left, :up_left)
+        value: Bitmask.from(:up, :right, :down, :down_left, :left, :up_left)
       }
       SIDE_DOWN_LINE = {
-        value: bitmask(:left, :down, :right, :up_right, :up, :up_left)
+        value: Bitmask.from(:left, :down, :right, :up_right, :up, :up_left)
       }
 
       L_DOWN_RIGHT = {
-        value: bitmask(:right, :down),
-        forbidden: bitmask(:left, :up, :down_right)
+        value: Bitmask.from(:right, :down),
+        forbidden: Bitmask.from(:left, :up, :down_right)
       }
       L_DOWN_LEFT = {
-        value: bitmask(:left, :down),
-        forbidden: bitmask(:up, :right, :down_left)
+        value: Bitmask.from(:left, :down),
+        forbidden: Bitmask.from(:up, :right, :down_left)
       }
       L_UP_RIGHT = {
-        value: bitmask(:right, :up),
-        forbidden: bitmask(:left, :down, :up_right)
+        value: Bitmask.from(:right, :up),
+        forbidden: Bitmask.from(:left, :down, :up_right)
       }
       L_UP_LEFT = {
-        value: bitmask(:left, :up),
-        forbidden: bitmask(:right, :down, :up_left)
+        value: Bitmask.from(:left, :up),
+        forbidden: Bitmask.from(:right, :down, :up_left)
       }
 
       T_DOWN_LEFT_RIGHT = {
-        value: bitmask(:left, :down, :right),
-        forbidden: bitmask(:up, :down_left, :down_right)
+        value: Bitmask.from(:left, :down, :right),
+        forbidden: Bitmask.from(:up, :down_left, :down_right)
       }
       T_UP_DOWN_RIGHT = {
-        value: bitmask(:right, :up, :down),
-        forbidden: bitmask(:left, :up_right, :down_right)
+        value: Bitmask.from(:right, :up, :down),
+        forbidden: Bitmask.from(:left, :up_right, :down_right)
       }
       T_UP_DOWN_LEFT = {
-        value: bitmask(:left, :up, :down),
-        forbidden: bitmask(:right, :up_left, :down_left)
+        value: Bitmask.from(:left, :up, :down),
+        forbidden: Bitmask.from(:right, :up_left, :down_left)
       }
       T_UP_LEFT_RIGHT = {
-        value: bitmask(:left, :up, :right),
-        forbidden: bitmask(:down, :up_left, :up_right)
+        value: Bitmask.from(:left, :up, :right),
+        forbidden: Bitmask.from(:down, :up_left, :up_right)
       }
 
       PLUS = {
-        value: bitmask(:left, :right, :up, :down)
+        value: Bitmask.from(:left, :right, :up, :down)
       }
 
       FAT_PLUS_UP_LEFT = {
-        value: bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left)
+        value: Bitmask.from(:left, :up, :up_right, :right, :down_right, :down, :down_left)
       }
       FAT_PLUS_UP_RIGHT = {
-        value: bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right)
+        value: Bitmask.from(:right, :up, :up_left, :left, :down_left, :down, :down_right)
       }
       FAT_PLUS_DOWN_LEFT = {
-        value: bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left)
+        value: Bitmask.from(:left, :down, :down_right, :right, :up_right, :up, :up_left)
       }
       FAT_PLUS_DOWN_RIGHT = {
-        value: bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right)
+        value: Bitmask.from(:right, :down, :down_left, :left, :up_left, :up, :up_right)
       }
 
       DIAGONAL_CONNECT_RIGHT = {
-        value: bitmask(:up, :up_right, :right, :down, :down_left, :left)
+        value: Bitmask.from(:up, :up_right, :right, :down, :down_left, :left)
       }
       DIAGONAL_CONNECT_LEFT = {
-        value: bitmask(:up, :up_left, :left, :down, :down_right, :right)
+        value: Bitmask.from(:up, :up_left, :left, :down, :down_right, :right)
       }
 
       VERTICAL_LINE_END_UP = {
-        value: bitmask(:down),
-        forbidden: bitmask(:up, :left, :right)
+        value: Bitmask.from(:down),
+        forbidden: Bitmask.from(:up, :left, :right)
       }
       VERTICAL_LINE = {
-        value: bitmask(:up, :down),
-        forbidden: bitmask(:left, :right)
+        value: Bitmask.from(:up, :down),
+        forbidden: Bitmask.from(:left, :right)
       }
       VERTICAL_LINE_END_DOWN = {
-        value: bitmask(:up),
-        forbidden: bitmask(:left, :down, :right)
+        value: Bitmask.from(:up),
+        forbidden: Bitmask.from(:left, :down, :right)
       }
 
       HORIZONTAL_LINE_END_LEFT = {
-        value: bitmask(:right),
-        forbidden: bitmask(:up, :left, :down)
+        value: Bitmask.from(:right),
+        forbidden: Bitmask.from(:up, :left, :down)
       }
       HORIZONTAL_LINE = {
-        value: bitmask(:left, :right),
-        forbidden: bitmask(:up, :down)
+        value: Bitmask.from(:left, :right),
+        forbidden: Bitmask.from(:up, :down)
       }
       HORIZONTAL_LINE_END_RIGHT = {
-        value: bitmask(:left),
-        forbidden: bitmask(:up, :right, :down)
+        value: Bitmask.from(:left),
+        forbidden: Bitmask.from(:up, :right, :down)
       }
 
       NO_NEIGHBORS = {
         value: 0,
-        forbidden: bitmask(:up, :down, :right, :left)
+        forbidden: Bitmask.from(:up, :down, :right, :left)
       }
 
       FULL_TILESET = (0...16).map { |row|
@@ -505,8 +500,8 @@ module DRT
       end
 
       def self.condition_for(tile)
-        has_all_required_bits = Condition::Has.new(tile[:value])
-        has_no_excluded_bits = Condition::HasNot.new(tile[:forbidden] || 255 - tile[:value])
+        has_all_required_bits = Bitmask::Condition::Has.new(tile[:value])
+        has_no_excluded_bits = Bitmask::Condition::HasNot.new(tile[:forbidden] || 255 - tile[:value])
         has_all_required_bits.and(has_no_excluded_bits)
       end
     end

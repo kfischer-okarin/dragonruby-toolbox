@@ -21,7 +21,7 @@ class AutotileExample
         ALL_DIRECTIONS.each do |direction|
           neighbor_coord = [tile_coord.x + direction.x, tile_coord.y + direction.y]
           args.state.neighbors[neighbor_coord] ||= 0
-          args.state.neighbors[neighbor_coord] |= DRT::Autotile.bitmask([-direction.x, -direction.y])
+          args.state.neighbors[neighbor_coord] |= DRT::Autotile::Bitmask.from([-direction.x, -direction.y])
         end
       end
       if mouse.button_right && args.state.tiles.key?(tile_coord)
@@ -29,7 +29,7 @@ class AutotileExample
         ALL_DIRECTIONS.each do |direction|
           neighbor_coord = [tile_coord.x + direction.x, tile_coord.y + direction.y]
           args.state.neighbors[neighbor_coord] ||= 0
-          args.state.neighbors[neighbor_coord] &= (255 - DRT::Autotile.bitmask([-direction.x, -direction.y]))
+          args.state.neighbors[neighbor_coord] &= (255 - DRT::Autotile::Bitmask.from([-direction.x, -direction.y]))
         end
       end
       args.outputs.sprites << args.state.tiles.keys.map { |coord|
