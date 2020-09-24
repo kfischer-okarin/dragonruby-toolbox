@@ -283,8 +283,7 @@ module DRT
       }
 
       CENTER = {
-        value: bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left),
-        forbidden: 0
+        value: bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
       }
 
       CORNER_UP_LEFT_LINE_LEFT = {
@@ -321,37 +320,29 @@ module DRT
       }
 
       CORNER_UP_LEFT_TWO_LINES = {
-        value: bitmask(:left, :up, :right, :down_right, :down),
-        forbidden: bitmask(:up_left, :up_right, :down_left)
+        value: bitmask(:left, :up, :right, :down_right, :down)
       }
       CORNER_UP_RIGHT_TWO_LINES = {
-        value: bitmask(:right, :up, :left, :down_left, :down),
-        forbidden: bitmask(:up_left, :up_right, :down_right)
+        value: bitmask(:right, :up, :left, :down_left, :down)
       }
       CORNER_DOWN_LEFT_TWO_LINES = {
-        value: bitmask(:left, :down, :right, :up_right, :up),
-        forbidden: bitmask(:up_left, :down_left, :down_right)
+        value: bitmask(:left, :down, :right, :up_right, :up)
       }
       CORNER_DOWN_RIGHT_TWO_LINES = {
-        value: bitmask(:right, :down, :left, :up_left, :up),
-        forbidden: bitmask(:up_right, :down_right, :down_left)
+        value: bitmask(:right, :down, :left, :up_left, :up)
       }
 
       SIDE_UP_LINE = {
-        value: bitmask(:left, :up, :right, :down_right, :down, :down_left),
-        forbidden: bitmask(:up_left, :up_right)
+        value: bitmask(:left, :up, :right, :down_right, :down, :down_left)
       }
       SIDE_LEFT_LINE = {
-        value: bitmask(:up, :left, :down, :down_right, :right, :up_right),
-        forbidden: bitmask(:up_left, :down_left)
+        value: bitmask(:up, :left, :down, :down_right, :right, :up_right)
       }
       SIDE_RIGHT_LINE = {
-        value: bitmask(:up, :right, :down, :down_left, :left, :up_left),
-        forbidden: bitmask(:up_right, :down_right)
+        value: bitmask(:up, :right, :down, :down_left, :left, :up_left)
       }
       SIDE_DOWN_LINE = {
-        value: bitmask(:left, :down, :right, :up_right, :up, :up_left),
-        forbidden: bitmask(:down_left, :down_right)
+        value: bitmask(:left, :down, :right, :up_right, :up, :up_left)
       }
 
       L_DOWN_RIGHT = {
@@ -389,34 +380,27 @@ module DRT
       }
 
       PLUS = {
-        value: bitmask(:left, :right, :up, :down),
-        forbidden: bitmask(:up_left, :up_right, :down_left, :down_right)
+        value: bitmask(:left, :right, :up, :down)
       }
 
       FAT_PLUS_UP_LEFT = {
-        value: bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left),
-        forbidden: bitmask(:up_left)
+        value: bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left)
       }
       FAT_PLUS_UP_RIGHT = {
-        value: bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right),
-        forbidden: bitmask(:up_right)
+        value: bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right)
       }
       FAT_PLUS_DOWN_LEFT = {
-        value: bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left),
-        forbidden: bitmask(:down_left)
+        value: bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left)
       }
       FAT_PLUS_DOWN_RIGHT = {
-        value: bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right),
-        forbidden: bitmask(:down_right)
+        value: bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right)
       }
 
       DIAGONAL_CONNECT_RIGHT = {
-        value: bitmask(:up, :up_right, :right, :down, :down_left, :left),
-        forbidden: bitmask(:up_left, :down_right)
+        value: bitmask(:up, :up_right, :right, :down, :down_left, :left)
       }
       DIAGONAL_CONNECT_LEFT = {
-        value: bitmask(:up, :up_left, :left, :down, :down_right, :right),
-        forbidden: bitmask(:up_right, :down_left)
+        value: bitmask(:up, :up_left, :left, :down, :down_right, :right)
       }
 
       VERTICAL_LINE_END_UP = {
