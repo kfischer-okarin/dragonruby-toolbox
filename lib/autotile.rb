@@ -45,7 +45,7 @@ module DRT
       # Bitmask has all specified direction bits set
       class Has < Condition
         def initialize(directions)
-          @bitmask = Autotile.bitmask(*directions)
+          @bitmask = directions.is_a?(Fixnum) ? directions : Autotile.bitmask(*directions)
         end
 
         def matches?(value)
@@ -434,6 +434,13 @@ module DRT
         forbidden: bitmask(:up, :down, :right, :left)
       }
 
+      FULL_TILESET = (0...16).map { |row|
+        start = row * 16
+        (start...(start + 16)).map { |value|
+          { value: value }
+        }
+      }
+
       TILESET_47 = [
         [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP],
         [                 SIDE_LEFT,          CENTER,                  SIDE_RIGHT,            T_UP_DOWN_RIGHT,                         PLUS,             T_UP_DOWN_LEFT,               VERTICAL_LINE],
@@ -443,32 +450,30 @@ module DRT
         [          CORNER_DOWN_LEFT,  SIDE_DOWN_LINE,           CORNER_DOWN_RIGHT,           FAT_PLUS_UP_LEFT,            FAT_PLUS_UP_RIGHT,      DIAGONAL_CONNECT_LEFT,      DIAGONAL_CONNECT_RIGHT],
         [  HORIZONTAL_LINE_END_LEFT, HORIZONTAL_LINE,   HORIZONTAL_LINE_END_RIGHT,         FAT_PLUS_DOWN_LEFT,          FAT_PLUS_DOWN_RIGHT,                        nil,                NO_NEIGHBORS]
       ]
-
-      FULL_TILESET = (0...16).map { |row|
-        start = row * 16
-        (start...(start + 16)).to_a
-      }
     end
 
-    class TilesetBuilder
-      def initialize(tile_size, tileset_definition)
-        @tile_size = tile_size
-        @tile_builder = TileBuilder.new(tile_size)
-        @tileset_definition = tileset_definition
+    # Source for generating Autotile tileset
+    TileSource = Struct.new(:path, :size)
+
+    class Tileset
+      def initialize(tiles)
+        @tiles = tiles
       end
 
-      def build(source)
-        @tileset_definition.reverse.flat_map.with_index { |row, tile_y|
+      def build_from(tile_source)
+        tile_builder = TileBuilder.new(tile_source.size)
+
+        @tiles.reverse.flat_map.with_index { |row, tile_y|
           row.map.with_index { |tile, tile_x|
             next unless tile
 
-            x = tile_x * @tile_size
-            y = tile_y * @tile_size
-            @tile_builder.generate(tile[:value]).tap { |tile_parts|
+            x = tile_x * tile_source.size
+            y = tile_y * tile_source.size
+            tile_builder.generate(tile[:value]).tap { |tile_parts|
               tile_parts.each do |part|
                 part[:x] += x
                 part[:y] += y
-                part[:path] = source
+                part[:path] = tile_source.path
               end
             }
           }
@@ -476,12 +481,15 @@ module DRT
       end
     end
 
-    def self.generate_full_tileset(autotile_source)
-      TilesetBuilder.new(32, Tiles::FULL_TILESET).build(autotile_source)
+    TILESET_47 = Tileset.new Tiles::TILESET_47
+    FULL_TILESET = Tileset.new Tiles::FULL_TILESET
+
+    def self.generate_full_tileset(tile_source)
+      FULL_TILESET.build_from(tile_source)
     end
 
-    def self.generate_tileset_47(autotile_source)
-      TilesetBuilder.new(32, Tiles::TILESET_47).build(autotile_source)
+    def self.generate_tileset_47(tile_source)
+      TILESET_47.build_from(tile_source)
     end
   end
 end
