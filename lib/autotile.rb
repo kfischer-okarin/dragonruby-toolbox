@@ -545,5 +545,9 @@ module DRT
     def self.generate_tileset_47(tile_source)
       TILESET_47.build_from(tile_source)
     end
+
+    def self.generate_tileset(tile_source_path, tile_size)
+      TILESET_47.build_from(TileSource.new(tile_source_path, tile_size))
+    end
   end
 end

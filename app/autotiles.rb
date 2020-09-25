@@ -10,7 +10,7 @@ class AutotileExample
     args.state.tiles ||= {}
     args.state.neighbors ||= {}
     if !args.state.initialized[:tileset]
-      args.render_target(:tileset).sprites << DRT::Autotile.generate_tileset_47(GRASS_AUTOTILE)
+      args.render_target(:tileset).sprites << DRT::Autotile.generate_tileset('sprites/grass-autotile.png', 32)
       args.state.initialized[:tileset] = true
       args.state.tile = DRT::Autotile::Tile.new(:tileset, GRASS_AUTOTILE.size)
     else
