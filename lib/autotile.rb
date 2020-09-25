@@ -225,7 +225,7 @@ module DRT
       end
 
       def generate(value)
-        base = { w: @part_size, h: @part_size }
+        base = { w: @part_size, h: @part_size }.sprite
         [
           base.merge(x: 0, y: 0).merge(matching_part(@down_left, value)),
           base.merge(x: @part_size, y: 0).merge(matching_part(@down_right, value)),
@@ -447,9 +447,6 @@ module DRT
       ]
     end
 
-    # Source for generating Autotile tileset
-    TileSource = Struct.new(:path, :size)
-
     class Tileset
       def initialize(tiles)
         @tiles = tiles
@@ -464,20 +461,20 @@ module DRT
         @tile_positions[neighborhood_bitmask]
       end
 
-      def build_from(tile_source)
-        tile_builder = TileBuilder.new(tile_source.size)
+      def generate_primitives(tile_source_path, tile_size)
+        tile_builder = TileBuilder.new(tile_size)
 
         @tiles.reverse.flat_map.with_index { |row, tile_y|
           row.map.with_index { |tile, tile_x|
             next unless tile
 
-            x = tile_x * tile_source.size
-            y = tile_y * tile_source.size
+            x = tile_x * tile_size
+            y = tile_y * tile_size
             tile_builder.generate(tile[:value]).tap { |tile_parts|
               tile_parts.each do |part|
                 part[:x] += x
                 part[:y] += y
-                part[:path] = tile_source.path
+                part[:path] = tile_source_path
               end
             }
           }
@@ -538,16 +535,12 @@ module DRT
       end
     end
 
-    def self.generate_full_tileset(tile_source)
-      FULL_TILESET.build_from(tile_source)
+    def self.generate_full_tileset_primitives(options)
+      FULL_TILESET.generate_primitives(options[:path], options[:size])
     end
 
-    def self.generate_tileset_47(tile_source)
-      TILESET_47.build_from(tile_source)
-    end
-
-    def self.generate_tileset(tile_source_path, tile_size)
-      TILESET_47.build_from(TileSource.new(tile_source_path, tile_size))
+    def self.generate_tileset_primitives(options)
+      TILESET_47.generate_primitives(options[:path], options[:size])
     end
   end
 end

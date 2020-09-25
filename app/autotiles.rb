@@ -1,7 +1,7 @@
 # require 'lib/low_resolution_canvas.rb'
 
 class AutotileExample
-  GRASS_AUTOTILE = DRT::Autotile::TileSource.new('sprites/grass-autotile.png', 32)
+  TILE_SIZE = 32
 
   ALL_DIRECTIONS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
 
@@ -10,9 +10,10 @@ class AutotileExample
     args.state.tiles ||= {}
     args.state.neighbors ||= {}
     if !args.state.initialized[:tileset]
-      args.render_target(:tileset).sprites << DRT::Autotile.generate_tileset('sprites/grass-autotile.png', 32)
+      tileset_primitives = DRT::Autotile.generate_tileset_primitives(path: 'sprites/grass-autotile.png', size: TILE_SIZE)
+      args.render_target(:tileset).primitives << tileset_primitives
       args.state.initialized[:tileset] = true
-      args.state.tile = DRT::Autotile::Tile.new(:tileset, GRASS_AUTOTILE.size)
+      args.state.tile = DRT::Autotile::Tile.new(:tileset, TILE_SIZE)
     else
       mouse = args.inputs.mouse
       tile_coord = [mouse.point.x.idiv(32), mouse.point.y.idiv(32)]
