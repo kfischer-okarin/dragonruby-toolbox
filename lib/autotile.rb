@@ -25,6 +25,16 @@ module DRT
         @bitmask = bitmask
       end
 
+      def +(direction)
+        other_bitmask = Bitmask.from(direction)
+        Neighbors.new(@bitmask | other_bitmask)
+      end
+
+      def -(direction)
+        other_bitmask = Bitmask.from(direction)
+        Neighbors.new(@bitmask & (255 - other_bitmask))
+      end
+
       def include?(*directions)
         other_bitmask = Bitmask.from(*directions)
         @bitmask & other_bitmask == other_bitmask
@@ -34,7 +44,7 @@ module DRT
         other_bitmask = Bitmask.from(*directions)
         @bitmask & other_bitmask == 0
       end
-    end
+      end
 
     # Map from direction name to bitmask
     SYMBOLS = {
@@ -485,16 +495,16 @@ module DRT
         @sprites = calc_sprites(tileset || TILESET_47)
       end
 
-      def render(neighborhood_bitmask)
-        @sprites[neighborhood_bitmask]
+      def render(neighbors)
+        @sprites[neighbors]
       end
 
       private
 
       def calc_sprites(tileset)
         tiles = {}
-        (0..255).map { |neighborhood_bitmask|
-          tile_position = tileset.tile_position_for(neighborhood_bitmask)
+        (0..255).map { |bitmask|
+          tile_position = tileset.tile_position_for(bitmask)
           tiles[tile_position] ||= {
             path: @path,
             source_x: tile_position.x * @size,
@@ -502,7 +512,7 @@ module DRT
             source_w: @size,
             source_h: @size
           }.freeze
-          [neighborhood_bitmask, tiles[tile_position]]
+          [Neighbors.new(bitmask), tiles[tile_position]]
         }.to_h
       end
     end

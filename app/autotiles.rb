@@ -21,20 +21,20 @@ class AutotileExample
         args.state.tiles[tile_coord] = true
         ALL_DIRECTIONS.each do |direction|
           neighbor_coord = [tile_coord.x + direction.x, tile_coord.y + direction.y]
-          args.state.neighbors[neighbor_coord] ||= 0
-          args.state.neighbors[neighbor_coord] |= DRT::Autotile::Bitmask.from([-direction.x, -direction.y])
+          args.state.neighbors[neighbor_coord] ||= DRT::Autotile::Neighbors.new
+          args.state.neighbors[neighbor_coord] += [-direction.x, -direction.y]
         end
       end
       if mouse.button_right && args.state.tiles.key?(tile_coord)
         args.state.tiles.delete tile_coord
         ALL_DIRECTIONS.each do |direction|
           neighbor_coord = [tile_coord.x + direction.x, tile_coord.y + direction.y]
-          args.state.neighbors[neighbor_coord] ||= 0
-          args.state.neighbors[neighbor_coord] &= (255 - DRT::Autotile::Bitmask.from([-direction.x, -direction.y]))
+          args.state.neighbors[neighbor_coord] ||= DRT::Autotile::Neighbors.new
+          args.state.neighbors[neighbor_coord] -= [-direction.x, -direction.y]
         end
       end
       args.outputs.sprites << args.state.tiles.keys.map { |coord|
-        bitmask = args.state.neighbors[coord] || 0
+        bitmask = args.state.neighbors[coord] || DRT::Autotile::Neighbors.new
         args.state.tile.render(bitmask).merge(x: coord.x * 32, y: coord.y * 32, w: 32, h: 32)
       }
     end
