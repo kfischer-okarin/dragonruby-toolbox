@@ -4,6 +4,8 @@ class AutotileExample
   TILE_SIZE = 32
 
   def tick(args)
+    # Uncomment to use a handmade 47-tile tileset
+    # args.state.tile ||= DRT::Autotile.new('sprites/autotile-tileset.png', TILE_SIZE)
     args.state.tile ||= DRT::Autotile.new(:tileset, TILE_SIZE)
     args.state.initialized ||= { tileset: false }
     args.state.tiles ||= {}
