@@ -4,7 +4,7 @@ class AutotileExample
   TILE_SIZE = 32
 
   def tick(args)
-    args.state.tile ||= DRT::Autotile::Tile.new(:tileset, TILE_SIZE)
+    args.state.tile ||= DRT::Autotile.new(:tileset, TILE_SIZE)
     args.state.initialized ||= { tileset: false }
     args.state.tiles ||= {}
     args.state.neighbors ||= {}

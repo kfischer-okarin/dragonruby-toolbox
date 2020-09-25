@@ -3,13 +3,23 @@
 # Released under the MIT License (see repository)
 
 module DRT
-  module Autotile
+  class Autotile
     def self.generate_tileset_primitives(options)
       TILESET_47.generate_primitives(options[:path], options[:size])
     end
 
     def self.generate_full_tileset_primitives(options)
       FULL_TILESET.generate_primitives(options[:path], options[:size])
+    end
+
+    def initialize(path, size, tileset = nil)
+      @path = path
+      @size = size
+      @sprites = calc_sprites(tileset || TILESET_47)
+    end
+
+    def render(neighbors)
+      @sprites[neighbors]
     end
 
     class Neighbors
@@ -53,6 +63,25 @@ module DRT
       def inspect
         serialize
       end
+    end
+
+    private
+
+    def calc_sprites(tileset)
+      tiles = {}
+      (0..255).map { |bitmask|
+        tile_position = tileset.tile_position_for(bitmask)
+        tiles[tile_position] ||= {
+          path: @path,
+          w: @size,
+          h: @size,
+          source_x: tile_position.x * @size,
+          source_y: tile_position.y * @size,
+          source_w: @size,
+          source_h: @size
+        }.freeze
+        [Neighbors.new(bitmask), tiles[tile_position]]
+      }.to_h
     end
 
     # Map from direction name to bitmask
@@ -496,36 +525,5 @@ module DRT
 
     TILESET_47 = TilesetDefinition.new Tiles::TILESET_47
     FULL_TILESET = TilesetDefinition.new Tiles::FULL_TILESET
-
-    class Tile
-      def initialize(path, size, tileset = nil)
-        @path = path
-        @size = size
-        @sprites = calc_sprites(tileset || TILESET_47)
-      end
-
-      def render(neighbors)
-        @sprites[neighbors]
-      end
-
-      private
-
-      def calc_sprites(tileset)
-        tiles = {}
-        (0..255).map { |bitmask|
-          tile_position = tileset.tile_position_for(bitmask)
-          tiles[tile_position] ||= {
-            path: @path,
-            w: @size,
-            h: @size,
-            source_x: tile_position.x * @size,
-            source_y: tile_position.y * @size,
-            source_w: @size,
-            source_h: @size
-          }.freeze
-          [Neighbors.new(bitmask), tiles[tile_position]]
-        }.to_h
-      end
-    end
   end
 end
