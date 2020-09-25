@@ -246,195 +246,195 @@ module DRT
       CORNER_UP_LEFT = {
         value: Bitmask.from(:right, :down_right, :down),
         forbidden: Bitmask.from(:up, :left)
-      }
+      }.freeze
       CORNER_UP_RIGHT = {
         value: Bitmask.from(:left, :down_left, :down),
         forbidden: Bitmask.from(:up, :right)
-      }
+      }.freeze
       CORNER_DOWN_LEFT = {
         value: Bitmask.from(:right, :up_right, :up),
         forbidden: Bitmask.from(:down, :left)
-      }
+      }.freeze
       CORNER_DOWN_RIGHT = {
         value: Bitmask.from(:left, :up_left, :up),
         forbidden: Bitmask.from(:down, :right)
-      }
+      }.freeze
 
       SIDE_UP = {
         value: Bitmask.from(:left, :down_left, :down, :down_right, :right),
         forbidden: Bitmask.from(:up)
-      }
+      }.freeze
       SIDE_DOWN = {
         value: Bitmask.from(:left, :up_left, :up, :up_right, :right),
         forbidden: Bitmask.from(:down)
-      }
+      }.freeze
       SIDE_LEFT = {
         value: Bitmask.from(:up, :up_right, :right, :down_right, :down),
         forbidden: Bitmask.from(:left)
-      }
+      }.freeze
       SIDE_RIGHT = {
         value: Bitmask.from(:up, :up_left, :left, :down_left, :down),
         forbidden: Bitmask.from(:right)
-      }
+      }.freeze
 
       CENTER = {
         value: Bitmask.from(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
-      }
+      }.freeze
 
       CORNER_UP_LEFT_LINE_LEFT = {
         value: Bitmask.from(:left, :down, :down_right, :right),
         forbidden: Bitmask.from(:down_left, :up)
-      }
+      }.freeze
       CORNER_UP_LEFT_LINE_UP = {
         value: Bitmask.from(:up, :down, :down_right, :right),
         forbidden: Bitmask.from(:up_right, :left)
-      }
+      }.freeze
       CORNER_UP_RIGHT_LINE_UP = {
         value: Bitmask.from(:up, :left, :down_left, :down),
         forbidden: Bitmask.from(:up_left, :right)
-      }
+      }.freeze
       CORNER_UP_RIGHT_LINE_RIGHT = {
         value: Bitmask.from(:right, :left, :down_left, :down),
         forbidden: Bitmask.from(:down_right, :up)
-      }
+      }.freeze
       CORNER_DOWN_LEFT_LINE_DOWN = {
         value: Bitmask.from(:down, :right, :up_right, :up),
         forbidden: Bitmask.from(:down_right, :left)
-      }
+      }.freeze
       CORNER_DOWN_LEFT_LINE_LEFT = {
         value: Bitmask.from(:left, :right, :up_right, :up),
         forbidden: Bitmask.from(:up_left, :down)
-      }
+      }.freeze
       CORNER_DOWN_RIGHT_LINE_RIGHT = {
         value: Bitmask.from(:right, :up, :up_left, :left),
         forbidden: Bitmask.from(:up_right, :down)
-      }
+      }.freeze
       CORNER_DOWN_RIGHT_LINE_DOWN = {
         value: Bitmask.from(:down, :up, :up_left, :left),
         forbidden: Bitmask.from(:down_left, :right)
-      }
+      }.freeze
 
       CORNER_UP_LEFT_TWO_LINES = {
         value: Bitmask.from(:left, :up, :right, :down_right, :down)
-      }
+      }.freeze
       CORNER_UP_RIGHT_TWO_LINES = {
         value: Bitmask.from(:right, :up, :left, :down_left, :down)
-      }
+      }.freeze
       CORNER_DOWN_LEFT_TWO_LINES = {
         value: Bitmask.from(:left, :down, :right, :up_right, :up)
-      }
+      }.freeze
       CORNER_DOWN_RIGHT_TWO_LINES = {
         value: Bitmask.from(:right, :down, :left, :up_left, :up)
-      }
+      }.freeze
 
       SIDE_UP_LINE = {
         value: Bitmask.from(:left, :up, :right, :down_right, :down, :down_left)
-      }
+      }.freeze
       SIDE_LEFT_LINE = {
         value: Bitmask.from(:up, :left, :down, :down_right, :right, :up_right)
-      }
+      }.freeze
       SIDE_RIGHT_LINE = {
         value: Bitmask.from(:up, :right, :down, :down_left, :left, :up_left)
-      }
+      }.freeze
       SIDE_DOWN_LINE = {
         value: Bitmask.from(:left, :down, :right, :up_right, :up, :up_left)
-      }
+      }.freeze
 
       L_DOWN_RIGHT = {
         value: Bitmask.from(:right, :down),
         forbidden: Bitmask.from(:left, :up, :down_right)
-      }
+      }.freeze
       L_DOWN_LEFT = {
         value: Bitmask.from(:left, :down),
         forbidden: Bitmask.from(:up, :right, :down_left)
-      }
+      }.freeze
       L_UP_RIGHT = {
         value: Bitmask.from(:right, :up),
         forbidden: Bitmask.from(:left, :down, :up_right)
-      }
+      }.freeze
       L_UP_LEFT = {
         value: Bitmask.from(:left, :up),
         forbidden: Bitmask.from(:right, :down, :up_left)
-      }
+      }.freeze
 
       T_DOWN_LEFT_RIGHT = {
         value: Bitmask.from(:left, :down, :right),
         forbidden: Bitmask.from(:up, :down_left, :down_right)
-      }
+      }.freeze
       T_UP_DOWN_RIGHT = {
         value: Bitmask.from(:right, :up, :down),
         forbidden: Bitmask.from(:left, :up_right, :down_right)
-      }
+      }.freeze
       T_UP_DOWN_LEFT = {
         value: Bitmask.from(:left, :up, :down),
         forbidden: Bitmask.from(:right, :up_left, :down_left)
-      }
+      }.freeze
       T_UP_LEFT_RIGHT = {
         value: Bitmask.from(:left, :up, :right),
         forbidden: Bitmask.from(:down, :up_left, :up_right)
-      }
+      }.freeze
 
       PLUS = {
         value: Bitmask.from(:left, :right, :up, :down)
-      }
+      }.freeze
 
       FAT_PLUS_UP_LEFT = {
         value: Bitmask.from(:left, :up, :up_right, :right, :down_right, :down, :down_left)
-      }
+      }.freeze
       FAT_PLUS_UP_RIGHT = {
         value: Bitmask.from(:right, :up, :up_left, :left, :down_left, :down, :down_right)
-      }
+      }.freeze
       FAT_PLUS_DOWN_LEFT = {
         value: Bitmask.from(:left, :down, :down_right, :right, :up_right, :up, :up_left)
-      }
+      }.freeze
       FAT_PLUS_DOWN_RIGHT = {
         value: Bitmask.from(:right, :down, :down_left, :left, :up_left, :up, :up_right)
-      }
+      }.freeze
 
       DIAGONAL_CONNECT_RIGHT = {
         value: Bitmask.from(:up, :up_right, :right, :down, :down_left, :left)
-      }
+      }.freeze
       DIAGONAL_CONNECT_LEFT = {
         value: Bitmask.from(:up, :up_left, :left, :down, :down_right, :right)
-      }
+      }.freeze
 
       VERTICAL_LINE_END_UP = {
         value: Bitmask.from(:down),
         forbidden: Bitmask.from(:up, :left, :right)
-      }
+      }.freeze
       VERTICAL_LINE = {
         value: Bitmask.from(:up, :down),
         forbidden: Bitmask.from(:left, :right)
-      }
+      }.freeze
       VERTICAL_LINE_END_DOWN = {
         value: Bitmask.from(:up),
         forbidden: Bitmask.from(:left, :down, :right)
-      }
+      }.freeze
 
       HORIZONTAL_LINE_END_LEFT = {
         value: Bitmask.from(:right),
         forbidden: Bitmask.from(:up, :left, :down)
-      }
+      }.freeze
       HORIZONTAL_LINE = {
         value: Bitmask.from(:left, :right),
         forbidden: Bitmask.from(:up, :down)
-      }
+      }.freeze
       HORIZONTAL_LINE_END_RIGHT = {
         value: Bitmask.from(:left),
         forbidden: Bitmask.from(:up, :right, :down)
-      }
+      }.freeze
 
       NO_NEIGHBORS = {
         value: 0,
         forbidden: Bitmask.from(:up, :down, :right, :left)
-      }
+      }.freeze
 
       FULL_TILESET = (0...16).map { |row|
         start = row * 16
         (start...(start + 16)).map { |value|
-          { value: value }
-        }
-      }
+          { value: value }.freeze
+        }.freeze
+      }.freeze
 
       TILESET_47 = [
         [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP],
@@ -444,21 +444,21 @@ module DRT
         [            SIDE_LEFT_LINE,             nil,             SIDE_RIGHT_LINE, CORNER_DOWN_LEFT_LINE_DOWN, CORNER_DOWN_RIGHT_LINE_RIGHT, CORNER_DOWN_LEFT_LINE_LEFT, CORNER_DOWN_RIGHT_LINE_DOWN],
         [          CORNER_DOWN_LEFT,  SIDE_DOWN_LINE,           CORNER_DOWN_RIGHT,           FAT_PLUS_UP_LEFT,            FAT_PLUS_UP_RIGHT,      DIAGONAL_CONNECT_LEFT,      DIAGONAL_CONNECT_RIGHT],
         [  HORIZONTAL_LINE_END_LEFT, HORIZONTAL_LINE,   HORIZONTAL_LINE_END_RIGHT,         FAT_PLUS_DOWN_LEFT,          FAT_PLUS_DOWN_RIGHT,                        nil,                NO_NEIGHBORS]
-      ]
+      ].map(&:freeze).freeze
     end
 
-    class Tileset
+    class TilesetDefinition
       def initialize(tiles)
         @tiles = tiles
 
-        @tile_positions = (0..255).map { |neighborhood_bitmask|
-          tile = tiles_with_condition.find { |tile| tile[:condition].matches? neighborhood_bitmask }
-          [neighborhood_bitmask, tile[:position]].freeze
+        @tile_positions = (0..255).map { |bitmask|
+          tile = tiles_with_condition.find { |tile| tile[:condition].matches? bitmask }
+          [bitmask, tile[:position]]
         }.to_h
       end
 
-      def tile_position_for(neighborhood_bitmask)
-        @tile_positions[neighborhood_bitmask]
+      def tile_position_for(bitmask)
+        @tile_positions[bitmask]
       end
 
       def generate_primitives(tile_source_path, tile_size)
@@ -489,8 +489,8 @@ module DRT
             next nil unless tile
 
             {
-              position: [x, y],
-              condition: tile[:condition] || Tileset.condition_for(tile)
+              position: [x, y].freeze,
+              condition: TilesetDefinition.condition_for(tile)
             }
           }
         }.compact
@@ -503,8 +503,8 @@ module DRT
       end
     end
 
-    TILESET_47 = Tileset.new Tiles::TILESET_47
-    FULL_TILESET = Tileset.new Tiles::FULL_TILESET
+    TILESET_47 = TilesetDefinition.new Tiles::TILESET_47
+    FULL_TILESET = TilesetDefinition.new Tiles::FULL_TILESET
 
     class Tile
       def initialize(path, size, tileset = nil)
