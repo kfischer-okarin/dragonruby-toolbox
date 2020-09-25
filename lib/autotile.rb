@@ -516,6 +516,8 @@ module DRT
           tile_position = tileset.tile_position_for(bitmask)
           tiles[tile_position] ||= {
             path: @path,
+            w: @size,
+            h: @size,
             source_x: tile_position.x * @size,
             source_y: tile_position.y * @size,
             source_w: @size,
