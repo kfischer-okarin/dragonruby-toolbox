@@ -4,6 +4,14 @@
 
 module DRT
   module Autotile
+    def self.generate_tileset_primitives(options)
+      TILESET_47.generate_primitives(options[:path], options[:size])
+    end
+
+    def self.generate_full_tileset_primitives(options)
+      FULL_TILESET.generate_primitives(options[:path], options[:size])
+    end
+
     # Map from direction name to bitmask
     SYMBOLS = {
       up: 0b00000001, up_right: 0b00000010, right: 0b00000100, down_right: 0b00001000,
@@ -533,14 +541,6 @@ module DRT
           [neighborhood_bitmask, tiles[tile_position]]
         }.to_h
       end
-    end
-
-    def self.generate_full_tileset_primitives(options)
-      FULL_TILESET.generate_primitives(options[:path], options[:size])
-    end
-
-    def self.generate_tileset_primitives(options)
-      TILESET_47.generate_primitives(options[:path], options[:size])
     end
   end
 end
