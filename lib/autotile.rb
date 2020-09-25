@@ -12,6 +12,30 @@ module DRT
       FULL_TILESET.generate_primitives(options[:path], options[:size])
     end
 
+    class Neighbors
+      class << self
+        def new(*directions)
+          bitmask = Bitmask.from(*directions)
+          @values ||= {}
+          @values[bitmask] ||= super(bitmask)
+        end
+      end
+
+      def initialize(bitmask)
+        @bitmask = bitmask
+      end
+
+      def include?(*directions)
+        other_bitmask = Bitmask.from(*directions)
+        @bitmask & other_bitmask == other_bitmask
+      end
+
+      def exclude?(*directions)
+        other_bitmask = Bitmask.from(*directions)
+        @bitmask & other_bitmask == 0
+      end
+    end
+
     # Map from direction name to bitmask
     SYMBOLS = {
       up: 0b00000001, up_right: 0b00000010, right: 0b00000100, down_right: 0b00001000,
@@ -32,165 +56,111 @@ module DRT
           values.map { |v| VECTORS[v] }.inject(0) { |sum, n| sum + n }
         when Symbol
           values.map { |v| SYMBOLS[v] }.inject(0) { |sum, n| sum + n }
+        when nil
+          0
         else
           raise "Value '#{values}' cannot be converted to bitmask"
-        end
-      end
-
-      class Condition
-        def and(condition)
-          And.new(self, condition)
-        end
-
-        def or(condition)
-          Or.new(self, condition)
-        end
-
-        # Bitmask has all specified direction bits set
-        class Has < Condition
-          def initialize(directions)
-            @bitmask = directions.is_a?(Fixnum) ? directions : Bitmask.from(*directions)
-          end
-
-          def matches?(value)
-            @bitmask & value == @bitmask
-          end
-        end
-
-        # Bitmask has none of the specified direction bits set
-        class HasNot < Has
-          def matches?(value)
-            @bitmask & value == 0
-          end
-        end
-
-        class And < Condition
-          def initialize(*conditions)
-            @conditions = conditions
-          end
-
-          def matches?(value)
-            @conditions.all? { |c| c.matches? value }
-          end
-        end
-
-        class Or < And
-          def matches?(value)
-            @conditions.any? { |c| c.matches? value }
-          end
-        end
-
-        module Helpers
-          def has(*directions)
-            Has.new(directions)
-          end
-
-          def has_not(*directions)
-            HasNot.new(directions)
-          end
         end
       end
     end
 
     # Definition of tile parts that will make up the tiles in the end
     module TileParts
-      extend Bitmask::Condition::Helpers
-
       SINGLE_UP_LEFT = {
         tile_corner: :up_left,
-        condition: has_not(:up, :left).and(has_not(:right).or(has_not(:down)))
+        condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
       }
       SINGLE_UP_RIGHT = {
         tile_corner: :up_right,
-        condition: has_not(:up, :right).and(has_not(:left).or(has_not(:down)))
+        condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
       }
       PLUS_UP_LEFT = {
         tile_corner: :up_left,
-        condition: has(:up, :left).and(has_not(:up_left))
+        condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
       }
       PLUS_UP_RIGHT = {
         tile_corner: :up_right,
-        condition: has(:up, :right).and(has_not(:up_right))
+        condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
       }
       SINGLE_DOWN_LEFT = {
         tile_corner: :down_left,
-        condition: has_not(:down, :left).and(has_not(:right).or(has_not(:up)))
+        condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
       }
       SINGLE_DOWN_RIGHT = {
         tile_corner: :down_right,
-        condition: has_not(:down, :right).and(has_not(:left).or(has_not(:up)))
+        condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
       }
       PLUS_DOWN_LEFT = {
         tile_corner: :down_left,
-        condition: has(:down, :left).and(has_not(:down_left))
+        condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
       }
       PLUS_DOWN_RIGHT = {
         tile_corner: :down_right,
-        condition: has(:down, :right).and(has_not(:down_right))
+        condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
       }
       CORNER_UP_LEFT = {
         tile_corner: :up_left,
-        condition: has_not(:up, :left).and(has(:right, :down))
+        condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
       }
       UP_LEFT = {
         tile_corner: :up_right,
-        condition: has_not(:up).and(has(:right))
+        condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
       }
       UP_RIGHT = {
         tile_corner: :up_left,
-        condition: has_not(:up).and(has(:left))
+        condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
       }
       CORNER_UP_RIGHT = {
         tile_corner: :up_right,
-        condition: has_not(:up, :right).and(has(:left, :down))
+        condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
       }
       LEFT_UP = {
         tile_corner: :down_left,
-        condition: has_not(:left).and(has(:down))
+        condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
       }
       CENTER_UP_LEFT = {
         tile_corner: :down_right,
-        condition: has(:right, :down, :down_right)
+        condition: ->(n) { n.include?(:right, :down, :down_right) }
       }
       CENTER_UP_RIGHT = {
         tile_corner: :down_left,
-        condition: has(:left, :down, :down_left)
+        condition: ->(n) { n.include?(:left, :down, :down_left) }
       }
       RIGHT_UP = {
         tile_corner: :down_right,
-        condition: has_not(:right).and(has(:down))
+        condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
       }
       LEFT_DOWN = {
         tile_corner: :up_left,
-        condition: has_not(:left).and(has(:up))
+        condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
       }
       CENTER_DOWN_LEFT = {
         tile_corner: :up_right,
-        condition: has(:right, :up, :up_right)
+        condition: ->(n) { n.include?(:right, :up, :up_right) }
       }
       CENTER_DOWN_RIGHT = {
         tile_corner: :up_left,
-        condition: has(:left, :up, :up_left)
+        condition: ->(n) { n.include?(:left, :up, :up_left) }
       }
       RIGHT_DOWN = {
         tile_corner: :up_right,
-        condition: has_not(:right).and(has(:up))
+        condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
       }
       CORNER_DOWN_LEFT = {
         tile_corner: :down_left,
-        condition: has_not(:down, :left).and(has(:right, :up))
+        condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
       }
       DOWN_LEFT = {
         tile_corner: :down_right,
-        condition: has_not(:down).and(has(:right))
+        condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
       }
       DOWN_RIGHT = {
         tile_corner: :down_left,
-        condition: has_not(:down).and(has(:left))
+        condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
       }
       CORNER_DOWN_RIGHT = {
         tile_corner: :down_right,
-        condition: has_not(:down, :right).and(has(:left, :up))
+        condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
       }
 
       PARTS = [
@@ -245,7 +215,7 @@ module DRT
       private
 
       def matching_part(definitions, value)
-        matched = definitions.find { |definition| definition[:condition].matches? value }
+        matched = definitions.find { |definition| definition[:condition].call Neighbors.new(value) }
         matched[:sprite]
       end
     end
@@ -460,7 +430,7 @@ module DRT
         @tiles = tiles
 
         @tile_positions = (0..255).map { |bitmask|
-          tile = tiles_with_condition.find { |tile| tile[:condition].matches? bitmask }
+          tile = tiles_with_condition.find { |tile| tile[:condition].call Neighbors.new(bitmask) }
           [bitmask, tile[:position]]
         }.to_h
       end
@@ -498,16 +468,10 @@ module DRT
 
             {
               position: [x, y].freeze,
-              condition: TilesetDefinition.condition_for(tile)
+              condition: ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
             }
           }
         }.compact
-      end
-
-      def self.condition_for(tile)
-        has_all_required_bits = Bitmask::Condition::Has.new(tile[:value])
-        has_no_excluded_bits = Bitmask::Condition::HasNot.new(tile[:forbidden] || 255 - tile[:value])
-        has_all_required_bits.and(has_no_excluded_bits)
       end
     end
 
