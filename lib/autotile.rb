@@ -44,7 +44,16 @@ module DRT
         other_bitmask = Bitmask.from(*directions)
         @bitmask & other_bitmask == 0
       end
+
+      def serialize
+        directions = SYMBOLS.keys.select { |d| include? d }
+        "Neighbors.new(#{directions.to_s[1..-2]})"
       end
+
+      def inspect
+        serialize
+      end
+    end
 
     # Map from direction name to bitmask
     SYMBOLS = {
