@@ -39,19 +39,34 @@ All of the shared tools consist of one ruby file which you can copy in your game
 
 File to include: [`lib/autotile.rb`](./lib/autotile.rb)
 
-```rb
-# Generate the tileset from the source file
-tileset_target = args.render_target(:grass_tileset)
-tileset_target.primitives << DRT::Autotile.generate_tileset_primitives('sprites/grass-autotile.png', 32)
+1. Generate an autotile tileset from a source file like this:
 
-# Create the tile
-grass_tile = DRT::Autotile.new(:grass_tileset, 32)
+   ![Autotile Source](sprites/grass-autotile.png)
 
-# Render
-args.outputs.primitives << grass_tile.render DRT::Autotile::Neighbors.new(:up, :right, :up_right)
-end
-```
+   ```rb
+   tileset_target = args.render_target(:grass_tileset)
+   tileset_target.primitives << DRT::Autotile.generate_tileset_primitives('sprites/grass-autotile.png', 32)
+   ```
 
+   Above file will create a tileset like this
+
+   ![Autotile Tileset](gifs/autotile-generated.png)
+
+   You can skip this step and handcraft a tileset with above layout yourself.
+
+2. Create a tile object using the tileset
+
+   ```rb
+   grass_tile = DRT::Autotile.new(:grass_tileset, 32)
+   ```
+
+3. Draw the correct tile by specifying which neighbor cells contain the same tile
+
+   ```rb
+   args.outputs.primitives << grass_tile.render DRT::Autotile::Neighbors.new(:up, :right, :up_right)
+   ```
+
+See the [source code comments](./lib/autotile.rb) for more details.
 
 ### [Low Resolution Canvas](./app/low_resolution.rb)
 
