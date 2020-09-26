@@ -23,6 +23,17 @@ module DRT
     end
 
     class Neighbors
+      # Map from direction name to bitmask
+      DIRECTIONS = {
+        up: 0b00000001, up_right: 0b00000010, right: 0b00000100, down_right: 0b00001000,
+        down: 0b00010000, down_left: 0b00100000, left: 0b01000000, up_left: 0b10000000
+      }.freeze
+      # Map from vector to bitmask
+      DIRECTION_VECTORS = {
+        [0, 1] => 0b00000001, [1, 1] => 0b00000010, [1, 0] => 0b00000100, [1, -1] => 0b00001000,
+        [0, -1] => 0b00010000, [-1, -1] => 0b00100000, [-1, 0] => 0b01000000, [-1, 1] => 0b10000000
+      }.freeze
+
       class << self
         def new(*directions)
           bitmask = Bitmask.from(*directions)
@@ -56,7 +67,7 @@ module DRT
       end
 
       def serialize
-        directions = SYMBOLS.keys.select { |d| include? d }
+        directions = DIRECTIONS.keys.select { |d| include? d }
         "Neighbors.new(#{directions.to_s[1..-2]})"
       end
 
@@ -84,26 +95,15 @@ module DRT
       }.to_h
     end
 
-    # Map from direction name to bitmask
-    SYMBOLS = {
-      up: 0b00000001, up_right: 0b00000010, right: 0b00000100, down_right: 0b00001000,
-      down: 0b00010000, down_left: 0b00100000, left: 0b01000000, up_left: 0b10000000
-    }.freeze
-    # Map from vector to bitmask
-    VECTORS = {
-      [0, 1] => 0b00000001, [1, 1] => 0b00000010, [1, 0] => 0b00000100, [1, -1] => 0b00001000,
-      [0, -1] => 0b00010000, [-1, -1] => 0b00100000, [-1, 0] => 0b01000000, [-1, 1] => 0b10000000
-    }.freeze
-
     module Bitmask
       def self.from(*values)
         case values[0]
         when Fixnum
           values[0]
         when Array
-          values.map { |v| VECTORS[v] }.inject(0) { |sum, n| sum + n }
+          values.map { |v| Neighbors::DIRECTION_VECTORS[v] }.inject(0) { |sum, n| sum + n }
         when Symbol
-          values.map { |v| SYMBOLS[v] }.inject(0) { |sum, n| sum + n }
+          values.map { |v| Neighbors::DIRECTIONS[v] }.inject(0) { |sum, n| sum + n }
         when nil
           0
         else
