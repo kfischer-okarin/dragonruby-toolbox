@@ -78,7 +78,7 @@ File to include: [`lib/autotile.rb`](./lib/autotile.rb)
    args.outputs.primitives << rendered_tile
    ```
 
-See the [source code comments](./lib/autotile.rb) for more details.
+See the [example source code](./app/autotiles.rb) and [library code comments](./lib/autotile.rb) for more details.
 
 ### [Low Resolution Canvas](./app/low_resolution.rb)
 
