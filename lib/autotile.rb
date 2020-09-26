@@ -12,16 +12,61 @@ module DRT
       FULL_TILESET.generate_primitives(options[:path], options[:size])
     end
 
+    # Create a single autotile
+    #
+    # @example Creating an 32x32 autotile
+    #   tile = DRT::Autotile.new('sprites/autotile-tileset.png', 32)
+    #
+    # @param path [String] Path to the tileset file
+    #   The tileset should contain 47 tiles arranged in a 7x7 grid that cover all important neighbor combinations.
+    #   see https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an example of such a
+    #   tileset.
+    # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
+    # @param tileset [TilesetDefinition, nil] Custom tileset configuration (optional)
+    #   Instead of the default tileset configuration you can specify your own custom tileset layout. By default {TILESET_47} is used.
+    #   There is also a second configuration {FULL_TILESET} which specifies all 256 tiles for all neighbor combinations in a 16x16 grid.
     def initialize(path, size, tileset = nil)
       @path = path
       @size = size
       @sprites = calc_sprites(tileset || TILESET_47)
     end
 
+    # Renders the tile sprite for the specified neighbor combination
+    #
+    # @example Render a map position
+    #   ALL_DIRECTIONS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
+    #
+    #   neighbors = Neighbors.new
+    #   ALL_DIRECTIONS.each do |direction|
+    #     neighbor_position = map.neighbor_of(position, direction)
+    #     neighbors += direction if map.tile_at(neighbor_position) == tile
+    #   end
+    #
+    #   args.outputs.primitives << tile.render(neighbors)
+    #
+    # @param neighbors [Neighbors] Neighbor combination. Use your game's map data to calculate this value.
+    # @return [Hash] Hash sprite primitive rendering the correct tile
     def render(neighbors)
       @sprites[neighbors]
     end
 
+    # This class is used to specify which of the neighbors of the current tile are containing the same tile to determine the right tile
+    # sprite to be rendered.
+    #
+    # Pass in directions as symbols (see {DIRECTIONS}) or as vectors (see {DIRECTION_VECTORS}).
+    #
+    # @example Specify neighbors with symbols
+    #   Neighbors.new(:up_right, :right, :down_right)
+    #
+    # @example Specify neighbors with vectors
+    #   Neighbors.new([0, 1], [0, -1])
+    #
+    # You can use the `+`` and `-` methods to calculate a new neighbors value by adding/removing the specified direction.
+    #
+    # @example Add a direction to a neighbors value
+    #   neighbors = Neighbors.new(:up)
+    #   new_neighbors = neighbors + :right # new_neighbors now contains :up and :right
+    #
     class Neighbors
       # Map from direction name to bitmask
       DIRECTIONS = {
