@@ -10,6 +10,7 @@
 
 - [**Getting Started**](#getting-started)
 - [Contents](#contents)
+  - [Autotiles](#autotiles)
   - [Low Resolution Canvas](#low-resolution-canvas)
   - [Transformations](#transformations)
   - [Color class with HSV/HSL support](#color-class-with-hsvhsl-support)
@@ -29,7 +30,28 @@ Checkout the repository into your dragonruby folder and just start the demo with
 
 All of the shared tools consist of one ruby file which you can copy in your game and require.
 
+
 ## Contents
+
+### Autotiles
+
+![Autotiles](gifs/autotiles.gif)
+
+File to include: [`lib/autotile.rb`](./lib/autotile.rb)
+
+```rb
+# Generate the tileset from the source file
+tileset_target = args.render_target(:grass_tileset)
+tileset_target.primitives << DRT::Autotile.generate_tileset_primitives('sprites/grass-autotile.png', 32)
+
+# Create the tile
+grass_tile = DRT::Autotile.new(:grass_tileset, 32)
+
+# Render
+args.outputs.primitives << grass_tile.render DRT::Autotile::Neighbors.new(:up, :right, :up_right)
+end
+```
+
 
 ### [Low Resolution Canvas](./app/low_resolution.rb)
 
@@ -53,18 +75,20 @@ def tick(args)
 end
 ```
 
+
 ### [Transformations](./app/transformations.rb)
 
 ![Transformations](gifs/transformations.gif)
+
 
 ### [Color class with HSV/HSL support](./app/colors_hsv_hsl.rb)
 
 ![HSV and HSL](gifs/color_hsv_hsl.gif)
 
+
 ### [Color accessor for attr_sprite enhanced classes](./app/color_accessor.rb)
 
 ![Color accessor](gifs/color_accessor.gif)
-
 
 
 ## Get Help
@@ -77,6 +101,7 @@ I'm usually online in the [DragonRuby Discord server](http://discord.dragonruby.
 This repository is not intended to be a comprehensive framework of any kind, but is rather a collection of tools I made I thought might be useful to share with whoever might find them useful.
 
 If you find any bug or have an idea how to improve the usability of the tools, feel free to open an issue. Even better, just join the DragonRuby Discord channel (see [Get Help](#get-help)) and discuss with me directly.
+
 
 ## License
 
