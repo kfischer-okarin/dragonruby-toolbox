@@ -22,13 +22,13 @@ module DRT
     #   see https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an example of such a
     #   tileset.
     # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
-    # @param tileset [TilesetDefinition, nil] Custom tileset configuration (optional)
+    # @param tileset_layout [TilesetLayout, nil] Custom tileset configuration (optional)
     #   Instead of the default tileset configuration you can specify your own custom tileset layout. By default {TILESET_47} is used.
     #   There is also a second configuration {FULL_TILESET} which specifies all 256 tiles for all neighbor combinations in a 16x16 grid.
-    def initialize(path, size, tileset = nil)
+    def initialize(path, size, tileset_layout = nil)
       @path = path
       @size = size
-      @sprites = calc_sprites(tileset || TILESET_47)
+      @sprites = calc_sprites(tileset_layout || TILESET_47)
     end
 
     # Renders the tile sprite for the specified neighbor combination
@@ -518,7 +518,7 @@ module DRT
       ].map(&:freeze).freeze
     end
 
-    class TilesetDefinition
+    class TilesetLayout
       def initialize(tiles)
         @tiles = tiles
 
@@ -568,7 +568,7 @@ module DRT
       end
     end
 
-    TILESET_47 = TilesetDefinition.new Tiles::TILESET_47
-    FULL_TILESET = TilesetDefinition.new Tiles::FULL_TILESET
+    TILESET_47 = TilesetLayout.new Tiles::TILESET_47
+    FULL_TILESET = TilesetLayout.new Tiles::FULL_TILESET
   end
 end
