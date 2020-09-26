@@ -4,14 +4,6 @@
 
 module DRT
   class Autotile
-    def self.generate_tileset_primitives(options)
-      TILESET_47.generate_primitives(options[:path], options[:size])
-    end
-
-    def self.generate_full_tileset_primitives(options)
-      FULL_TILESET.generate_primitives(options[:path], options[:size])
-    end
-
     # Create a single autotile
     #
     # @example Creating an 32x32 autotile
@@ -19,7 +11,7 @@ module DRT
     #
     # @param path [String] Path to the tileset file
     #   The tileset should contain 47 tiles arranged in a 7x7 grid that cover all important neighbor combinations.
-    #   see https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an example of such a
+    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an example of such a
     #   tileset.
     # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
     # @param tileset_layout [TilesetLayout, nil] Custom tileset configuration (optional)
@@ -119,6 +111,19 @@ module DRT
       def inspect
         serialize
       end
+    end
+
+    # Use a simpler autotile source image to generate a full tileset on the fly and save it in a render target.
+    #
+    # @param path [String] Path to the autotile source image file
+    #   This source image a layout inspired by the RPG Maker tileset format.
+    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/grass-autotile.png for an example of such an
+    #   image.
+    # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
+    # @param tileset_layout [TilesetLayout] (optional) Custom tileset layout used for generation
+    #   See explanation in {#initialize}.
+    def self.generate_tileset_primitives(path, size, tileset_layout = nil)
+      (tileset_layout || TILESET_47).generate_primitives(path, size)
     end
 
     private

@@ -31,7 +31,7 @@ class AutotileExample
   ALL_DIRECTIONS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
 
   def create_tileset(args)
-    tileset_primitives = DRT::Autotile.generate_tileset_primitives(path: 'sprites/grass-autotile.png', size: TILE_SIZE)
+    tileset_primitives = DRT::Autotile.generate_tileset_primitives('sprites/grass-autotile.png', TILE_SIZE)
     args.render_target(:tileset).primitives << tileset_primitives
   end
 
