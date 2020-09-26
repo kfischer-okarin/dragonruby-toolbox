@@ -9,7 +9,6 @@ class AutotileExample
     args.state.tile ||= DRT::Autotile.new(:tileset, TILE_SIZE)
     args.state.initialized ||= { tileset: false }
     args.state.tiles ||= {}
-    args.state.neighbors ||= {}
     if !args.state.initialized[:tileset]
       create_tileset(args)
       args.state.initialized[:tileset] = true
@@ -17,14 +16,14 @@ class AutotileExample
       mouse = args.inputs.mouse
       tile_coord = [mouse.point.x.idiv(32), mouse.point.y.idiv(32)]
       if mouse.button_left && !args.state.tiles.key?(tile_coord)
-        args.state.tiles[tile_coord] = true
+        args.state.tiles[tile_coord] = initialize_tile_instance(args, tile_coord)
         add_tile_as_neighbor_of_all_neighbors(args, tile_coord)
       end
       if mouse.button_right && args.state.tiles.key?(tile_coord)
         args.state.tiles.delete tile_coord
         remove_tile_as_neighbor_of_all_neighbors(args, tile_coord)
       end
-      render_tiles(args)
+      args.outputs.sprites << args.state.tiles.values
     end
   end
 
@@ -35,26 +34,32 @@ class AutotileExample
     args.render_target(:tileset).primitives << tileset_primitives
   end
 
-  def add_tile_as_neighbor_of_all_neighbors(args, tile_coord)
+  def each_neighbor(args, tile_coord)
     ALL_DIRECTIONS.each do |direction|
       neighbor_coord = [tile_coord.x + direction.x, tile_coord.y + direction.y]
-      args.state.neighbors[neighbor_coord] ||= DRT::Autotile::Neighbors.new
-      args.state.neighbors[neighbor_coord] += [-direction.x, -direction.y]
+      next unless args.state.tiles.key? neighbor_coord
+
+      yield neighbor_coord, direction
+    end
+  end
+
+  def initialize_tile_instance(args, tile_coord)
+    args.state.tile.create_instance(x: tile_coord.x * 32, y: tile_coord.y * 32).tap { |tile_instance|
+      each_neighbor(args, tile_coord) do |neighbor_coord, direction|
+        tile_instance.neighbors += direction
+      end
+    }
+  end
+
+  def add_tile_as_neighbor_of_all_neighbors(args, tile_coord)
+    each_neighbor(args, tile_coord) do |neighbor_coord, direction|
+      args.state.tiles[neighbor_coord].neighbors += [-direction.x, -direction.y]
     end
   end
 
   def remove_tile_as_neighbor_of_all_neighbors(args, tile_coord)
-    ALL_DIRECTIONS.each do |direction|
-      neighbor_coord = [tile_coord.x + direction.x, tile_coord.y + direction.y]
-      args.state.neighbors[neighbor_coord] ||= DRT::Autotile::Neighbors.new
-      args.state.neighbors[neighbor_coord] -= [-direction.x, -direction.y]
+    each_neighbor(args, tile_coord) do |neighbor_coord, direction|
+      args.state.tiles[neighbor_coord].neighbors -= [-direction.x, -direction.y]
     end
-  end
-
-  def render_tiles(args)
-    args.outputs.sprites << args.state.tiles.keys.map { |coord|
-      neighbors = args.state.neighbors[coord] || DRT::Autotile::Neighbors.new
-      args.state.tile.render(neighbors).merge(x: coord.x * 32, y: coord.y * 32)
-    }
   end
 end

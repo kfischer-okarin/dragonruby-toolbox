@@ -62,8 +62,20 @@ File to include: [`lib/autotile.rb`](./lib/autotile.rb)
 
 3. Draw the correct tile by specifying which neighbor cells contain the same tile
 
+   Method 1 (recommended): Create Autotile instances
+
    ```rb
-   args.outputs.primitives << grass_tile.render DRT::Autotile::Neighbors.new(:up, :right, :up_right)
+   tile_instance = grass_tile.create_instance(x: 200, y: 200, neighbors: DRT::Autotile::Neighbors.new(:up, :right, :up_right))
+   args.outputs.primitives << tile_instance
+   ```
+
+   Method 2: Render hash primitives
+   ```rb
+   rendered_tile = grass_tile.render DRT::Autotile::Neighbors.new(:up, :right, :up_right)
+   rendered_tile[:x] = 200
+   rendered_tile[:y] = 200
+
+   args.outputs.primitives << rendered_tile
    ```
 
 See the [source code comments](./lib/autotile.rb) for more details.

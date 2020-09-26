@@ -4,6 +4,8 @@
 
 module DRT
   class Autotile
+    attr_reader :path, :size
+
     # Create a single autotile
     #
     # @example Creating an 32x32 autotile
@@ -23,7 +25,22 @@ module DRT
       @sprites = calc_sprites(tileset_layout || TILESET_47)
     end
 
-    # Renders the tile sprite for the specified neighbor combination
+    # Creates a renderable tile instance with all attr_sprite methods and a neighbors setter which will update the rendered tile.
+    #
+    # @example Create a tile instance
+    #  tile.create_instance(x: 200, y: 200)
+    #
+    # @param initial_values [Hash] (optional) initial values for tile attributes (x, y, etc)
+    def create_instance(initial_values = nil)
+      values = initial_values || {}
+      Instance.new(self).tap { |instance|
+        values.each do |attribute, value|
+          instance.send(:"#{attribute}=", value)
+        end
+      }
+    end
+
+    # Renders the tile sprite for the specified neighbor combination as hash primitive
     #
     # @example Render a map position
     #   ALL_DIRECTIONS = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]
@@ -110,6 +127,34 @@ module DRT
 
       def inspect
         serialize
+      end
+    end
+
+    # Renderable Autotile instance
+    # It supports all attr_sprites methods and you can directly set and update the neighbors value on this object
+    class Instance
+      attr_accessor :x, :y, :w, :h, :r, :g, :b, :a, :angle, :flip_horizontally, :flip_vertically, :angle_anchor_x, :angle_anchor_y
+
+      attr_reader :tile_x, :tile_y, :tile_w, :tile_h, :source_x, :source_y, :source_w, :source_h, :path,
+                  :neighbors
+
+      def initialize(tile)
+        @tile = tile
+        @w = @h = @source_w = @source_h = tile.size
+        @path = tile.path
+
+        self.neighbors = Neighbors.new
+      end
+
+      def neighbors=(value)
+        rendered = @tile.render(value)
+        @source_x = rendered[:source_x]
+        @source_y = rendered[:source_y]
+        @neighbors = value
+      end
+
+      def primitive_marker
+        :sprite
       end
     end
 
