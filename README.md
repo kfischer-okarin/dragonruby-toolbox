@@ -1,13 +1,37 @@
 # DragonRuby Toolbox
 
-Useful classes &amp; code snippets for DragonRuby GameToolkit
+![Github License](https://img.shields.io/badge/license-MIT-green)
 
-Start the demo with
+
+#### Useful classes &amp; code snippets for DragonRuby GameToolkit
+
+
+## Table of content
+
+- [**Getting Started**](#getting-started)
+- [Contents](#contents)
+  - [Low Resolution Canvas](#low-resolution-canvas)
+  - [Transformations](#transformations)
+  - [Color class with HSV/HSL support](#color-class-with-hsvhsl-support)
+  - [Color accessor for attr_sprite enhanced classes](#color-accessor-for-attr_sprite-enhanced-classes)
+- [Get Help](#get-help)
+- [Contributing](#contributing)
+- [License](#license)
+
+
+## Getting Started
+
+Checkout the repository into your dragonruby folder and just start the demo with:
+
 ```sh
 ./dragonruby dragonruby-toolbox
 ```
 
-## [Low Resolution Canvas](./app/low_resolution.rb)
+All of the shared tools consist of one ruby file which you can copy in your game and require.
+
+## Contents
+
+### [Low Resolution Canvas](./app/low_resolution.rb)
 
 ![Low Resolution](gifs/lowresolution.png)
 
@@ -29,14 +53,31 @@ def tick(args)
 end
 ```
 
-## [Transformations](./app/transformations.rb)
+### [Transformations](./app/transformations.rb)
 
 ![Transformations](gifs/transformations.gif)
 
-## [Color class with HSV/HSL support](./app/colors_hsv_hsl.rb)
+### [Color class with HSV/HSL support](./app/colors_hsv_hsl.rb)
 
 ![HSV and HSL](gifs/color_hsv_hsl.gif)
 
-## [Color accessor for attr_sprite enhanced classes](./app/color_accessor.rb)
+### [Color accessor for attr_sprite enhanced classes](./app/color_accessor.rb)
 
 ![Color accessor](gifs/color_accessor.gif)
+
+
+
+## Get Help
+
+I'm usually online in the [DragonRuby Discord server](http://discord.dragonruby.org/) as user **kfischer_okarin**. If you have any questions or suggestions join the server and ping me. :)
+
+
+## Contributing
+
+This repository is not intended to be a comprehensive framework of any kind, but is rather a collection of tools I made I thought might be useful to share with whoever might find them useful.
+
+If you find any bug or have an idea how to improve the usability of the tools, feel free to open an issue. Even better, just join the DragonRuby Discord channel (see [Get Help](#get-help)) and discuss with me directly.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE)
