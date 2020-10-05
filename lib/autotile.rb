@@ -169,7 +169,7 @@ module DRT
     # @param tileset_layout [TilesetLayout] (optional) Custom tileset layout used for generation
     #   See explanation in {#initialize}.
     def self.generate_tileset_primitives(path, size, tileset_layout = nil)
-      (tileset_layout || TILESET_47).generate_primitives(path, size)
+      TilesetBuilder.new(path, size, tileset_layout || TILESET_47).build_primitives
     end
 
     private
@@ -582,8 +582,9 @@ module DRT
         @tiles = tiles
 
         @tile_positions = (0..255).map { |bitmask|
-          tile = tiles_with_condition.find { |tile| tile[:condition].call Neighbors.new(bitmask) }
-          [bitmask, tile[:position]]
+          neighbors = Neighbors.new(bitmask)
+          matching_tile = tiles_with_condition.find { |tile| tile[:condition].call neighbors }
+          [bitmask, matching_tile[:position]]
         }.to_h
       end
 
@@ -591,39 +592,54 @@ module DRT
         @tile_positions[bitmask]
       end
 
-      def generate_primitives(tile_source_path, tile_size)
-        tile_builder = TileBuilder.new(tile_size)
+      def each_tile_with_xy
+        Enumerator.new do |y|
+          @tiles.reverse.each_with_index { |row, tile_y|
+            row.each_with_index { |tile, tile_x|
+              next unless tile
 
-        @tiles.reverse.flat_map.with_index { |row, tile_y|
-          row.map.with_index { |tile, tile_x|
-            next unless tile
-
-            x = tile_x * tile_size
-            y = tile_y * tile_size
-            tile_builder.generate(tile[:value]).tap { |tile_parts|
-              tile_parts.each do |part|
-                part[:x] += x
-                part[:y] += y
-                part[:path] = tile_source_path
-              end
+              y.yield(tile, tile_x, tile_y)
             }
           }
-        }
+        end
       end
 
       private
 
       def tiles_with_condition
-        @tiles_with_condition ||= @tiles.reverse.flat_map.with_index { |row, y|
-          row.map.with_index { |tile, x|
-            next nil unless tile
-
-            {
-              position: [x, y].freeze,
-              condition: ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
-            }
+        @tiles_with_condition ||= each_tile_with_xy.map { |tile, tile_x, tile_y|
+          {
+            position: [tile_x, tile_y].freeze,
+            condition: ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
           }
-        }.compact
+        }
+      end
+    end
+
+    class TilesetBuilder
+      def initialize(tilesource_path, size, layout)
+        @tilesource_path = tilesource_path
+        @size = size
+        @layout = layout
+        @tile_builder = TileBuilder.new(size)
+      end
+
+      def build_primitives
+        @layout.each_tile_with_xy.flat_map { |tile, tile_x, tile_y|
+          tile_primitives(tile, tile_x * @size, tile_y * @size)
+        }
+      end
+
+      private
+
+      def tile_primitives(tile, offset_x, offset_y)
+        @tile_builder.generate(tile[:value]).tap { |tile_parts|
+          tile_parts.each do |part|
+            part[:x] += offset_x
+            part[:y] += offset_y
+            part[:path] = @tilesource_path
+          end
+        }
       end
     end
 
