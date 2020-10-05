@@ -1,5 +1,6 @@
 # require 'lib/low_resolution_canvas.rb'
 
+# rubocop:disable all
 class LowResolutionExample
   def tick(args)
     # Specify your canvas resolution as the first constructor argument

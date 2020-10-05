@@ -1,6 +1,7 @@
 # require 'lib/color.rb'
 # require 'lib/attr_sprite_accessor.rb'
 
+# rubocop:disable all
 class ColorAccessorExample
   def tick(args)
     args.state.dragon ||= create_dragon

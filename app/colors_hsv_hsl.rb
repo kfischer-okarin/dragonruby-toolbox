@@ -1,5 +1,6 @@
 # require 'lib/color.rb'
 
+# rubocop:disable all
 class ColorsHsvHslExample
   def tick(args)
     args.state.type ||= :hsv

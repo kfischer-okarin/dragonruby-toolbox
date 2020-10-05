@@ -1,5 +1,6 @@
 # require 'lib/low_resolution_canvas.rb'
 
+# rubocop:disable all
 class AutotileExample
   TILE_SIZE = 32
 

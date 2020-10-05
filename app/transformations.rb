@@ -1,5 +1,6 @@
 # require 'lib/transformations.rb'
 
+# rubocop:disable all
 class TransformationsExample
   def tick(args)
     if args.tick_count.zero?
