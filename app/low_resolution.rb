@@ -4,7 +4,7 @@
 class LowResolutionExample
   def tick(args)
     # Specify your canvas resolution as the first constructor argument
-    args.state.canvas ||= LowResolutionCanvas.new([64, 64])
+    args.state.canvas ||= DRT::LowResolutionCanvas.new([64, 64])
 
     args.state.canvas.background_color = [255, 255, 255]
     args.state.canvas.labels << [20, 60, 'test']
