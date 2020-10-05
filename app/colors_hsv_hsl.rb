@@ -80,13 +80,13 @@ class ColorsHsvHslExample
 
   def hsv_wheel(value)
     color_wheel { |deg, r|
-      Color.from_hsv(deg, r, value)
+      DRT::Color.from_hsv(deg, r, value)
     }
   end
 
   def hsl_wheel(value)
     color_wheel { |deg, r|
-      Color.from_hsl(deg, r, value)
+      DRT::Color.from_hsl(deg, r, value)
     }
   end
 
