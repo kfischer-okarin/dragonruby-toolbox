@@ -3,6 +3,7 @@
 # Released under the MIT License (see repository)
 
 module DRT
+  # Autotile that renders in different ways depending on how many neighbors have the same tiles
   class Autotile
     attr_reader :path, :size
 
@@ -100,13 +101,13 @@ module DRT
         @bitmask = bitmask
       end
 
-      def +(direction)
-        other_bitmask = Bitmask.from(direction)
+      def +(other)
+        other_bitmask = Bitmask.from(other)
         Neighbors.new(@bitmask | other_bitmask)
       end
 
-      def -(direction)
-        other_bitmask = Bitmask.from(direction)
+      def -(other)
+        other_bitmask = Bitmask.from(other)
         Neighbors.new(@bitmask & (255 - other_bitmask))
       end
 
@@ -117,7 +118,7 @@ module DRT
 
       def exclude?(*directions)
         other_bitmask = Bitmask.from(*directions)
-        @bitmask & other_bitmask == 0
+        (@bitmask & other_bitmask).zero?
       end
 
       def serialize
@@ -177,23 +178,27 @@ module DRT
       tiles = {}
       (0..255).map { |bitmask|
         tile_position = tileset.tile_position_for(bitmask)
-        tiles[tile_position] ||= {
-          path: @path,
-          w: @size,
-          h: @size,
-          source_x: tile_position.x * @size,
-          source_y: tile_position.y * @size,
-          source_w: @size,
-          source_h: @size
-        }.freeze
+        tiles[tile_position] ||= tile_for_position(tile_position)
         [Neighbors.new(bitmask), tiles[tile_position]]
       }.to_h
+    end
+
+    def tile_for_position(position)
+      {
+        path: @path,
+        w: @size,
+        h: @size,
+        source_x: position.x * @size,
+        source_y: position.y * @size,
+        source_w: @size,
+        source_h: @size
+      }.freeze
     end
 
     module Bitmask
       def self.from(*values)
         case values[0]
-        when Fixnum
+        when Integer
           values[0]
         when Array
           values.map { |v| Neighbors::DIRECTION_VECTORS[v] }.inject(0) { |sum, n| sum + n }
@@ -208,112 +213,114 @@ module DRT
     end
 
     # Definition of tile parts that will make up the tiles in the end
-    module TileParts
+    module TileParts # rubocop:disable Metrics/ModuleLength
       SINGLE_UP_LEFT = {
         tile_corner: :up_left,
         condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
-      }
+      }.freeze
       SINGLE_UP_RIGHT = {
         tile_corner: :up_right,
         condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
-      }
+      }.freeze
       PLUS_UP_LEFT = {
         tile_corner: :up_left,
         condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
-      }
+      }.freeze
       PLUS_UP_RIGHT = {
         tile_corner: :up_right,
         condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
-      }
+      }.freeze
       SINGLE_DOWN_LEFT = {
         tile_corner: :down_left,
         condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
-      }
+      }.freeze
       SINGLE_DOWN_RIGHT = {
         tile_corner: :down_right,
         condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
-      }
+      }.freeze
       PLUS_DOWN_LEFT = {
         tile_corner: :down_left,
         condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
-      }
+      }.freeze
       PLUS_DOWN_RIGHT = {
         tile_corner: :down_right,
         condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
-      }
+      }.freeze
       CORNER_UP_LEFT = {
         tile_corner: :up_left,
         condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
-      }
+      }.freeze
       UP_LEFT = {
         tile_corner: :up_right,
         condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
-      }
+      }.freeze
       UP_RIGHT = {
         tile_corner: :up_left,
         condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
-      }
+      }.freeze
       CORNER_UP_RIGHT = {
         tile_corner: :up_right,
         condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
-      }
+      }.freeze
       LEFT_UP = {
         tile_corner: :down_left,
         condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
-      }
+      }.freeze
       CENTER_UP_LEFT = {
         tile_corner: :down_right,
         condition: ->(n) { n.include?(:right, :down, :down_right) }
-      }
+      }.freeze
       CENTER_UP_RIGHT = {
         tile_corner: :down_left,
         condition: ->(n) { n.include?(:left, :down, :down_left) }
-      }
+      }.freeze
       RIGHT_UP = {
         tile_corner: :down_right,
         condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
-      }
+      }.freeze
       LEFT_DOWN = {
         tile_corner: :up_left,
         condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
-      }
+      }.freeze
       CENTER_DOWN_LEFT = {
         tile_corner: :up_right,
         condition: ->(n) { n.include?(:right, :up, :up_right) }
-      }
+      }.freeze
       CENTER_DOWN_RIGHT = {
         tile_corner: :up_left,
         condition: ->(n) { n.include?(:left, :up, :up_left) }
-      }
+      }.freeze
       RIGHT_DOWN = {
         tile_corner: :up_right,
         condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
-      }
+      }.freeze
       CORNER_DOWN_LEFT = {
         tile_corner: :down_left,
         condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
-      }
+      }.freeze
       DOWN_LEFT = {
         tile_corner: :down_right,
         condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
-      }
+      }.freeze
       DOWN_RIGHT = {
         tile_corner: :down_left,
         condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
-      }
+      }.freeze
       CORNER_DOWN_RIGHT = {
         tile_corner: :down_right,
         condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
-      }
+      }.freeze
 
+      # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
       PARTS = [
-        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT],
-        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT],
-        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT],
-        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP],
-        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN],
-        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT]
-      ]
+        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT].freeze,
+        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT].freeze,
+        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT].freeze,
+        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP].freeze,
+        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN].freeze,
+        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT].freeze
+      ].freeze
+      # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
 
       def self.definitions_for(corner, part_size)
         [].tap { |result|
@@ -363,7 +370,7 @@ module DRT
       end
     end
 
-    module Tiles
+    module Tiles # rubocop:disable Metrics/ModuleLength
       CORNER_UP_LEFT = {
         value: Bitmask.from(:right, :down_right, :down),
         forbidden: Bitmask.from(:up, :left)
@@ -557,15 +564,17 @@ module DRT
         }.freeze
       }.freeze
 
+      # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
       TILESET_47 = [
-        [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP],
-        [                 SIDE_LEFT,          CENTER,                  SIDE_RIGHT,            T_UP_DOWN_RIGHT,                         PLUS,             T_UP_DOWN_LEFT,               VERTICAL_LINE],
-        [CORNER_DOWN_LEFT_TWO_LINES,       SIDE_DOWN, CORNER_DOWN_RIGHT_TWO_LINES,                 L_UP_RIGHT,              T_UP_LEFT_RIGHT,                  L_UP_LEFT,      VERTICAL_LINE_END_DOWN],
-        [            CORNER_UP_LEFT,    SIDE_UP_LINE,             CORNER_UP_RIGHT,   CORNER_UP_LEFT_LINE_LEFT,      CORNER_UP_RIGHT_LINE_UP,     CORNER_UP_LEFT_LINE_UP,  CORNER_UP_RIGHT_LINE_RIGHT],
-        [            SIDE_LEFT_LINE,             nil,             SIDE_RIGHT_LINE, CORNER_DOWN_LEFT_LINE_DOWN, CORNER_DOWN_RIGHT_LINE_RIGHT, CORNER_DOWN_LEFT_LINE_LEFT, CORNER_DOWN_RIGHT_LINE_DOWN],
-        [          CORNER_DOWN_LEFT,  SIDE_DOWN_LINE,           CORNER_DOWN_RIGHT,           FAT_PLUS_UP_LEFT,            FAT_PLUS_UP_RIGHT,      DIAGONAL_CONNECT_LEFT,      DIAGONAL_CONNECT_RIGHT],
-        [  HORIZONTAL_LINE_END_LEFT, HORIZONTAL_LINE,   HORIZONTAL_LINE_END_RIGHT,         FAT_PLUS_DOWN_LEFT,          FAT_PLUS_DOWN_RIGHT,                        nil,                NO_NEIGHBORS]
-      ].map(&:freeze).freeze
+        [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP].freeze,
+        [                 SIDE_LEFT,          CENTER,                  SIDE_RIGHT,            T_UP_DOWN_RIGHT,                         PLUS,             T_UP_DOWN_LEFT,               VERTICAL_LINE].freeze,
+        [CORNER_DOWN_LEFT_TWO_LINES,       SIDE_DOWN, CORNER_DOWN_RIGHT_TWO_LINES,                 L_UP_RIGHT,              T_UP_LEFT_RIGHT,                  L_UP_LEFT,      VERTICAL_LINE_END_DOWN].freeze,
+        [            CORNER_UP_LEFT,    SIDE_UP_LINE,             CORNER_UP_RIGHT,   CORNER_UP_LEFT_LINE_LEFT,      CORNER_UP_RIGHT_LINE_UP,     CORNER_UP_LEFT_LINE_UP,  CORNER_UP_RIGHT_LINE_RIGHT].freeze,
+        [            SIDE_LEFT_LINE,             nil,             SIDE_RIGHT_LINE, CORNER_DOWN_LEFT_LINE_DOWN, CORNER_DOWN_RIGHT_LINE_RIGHT, CORNER_DOWN_LEFT_LINE_LEFT, CORNER_DOWN_RIGHT_LINE_DOWN].freeze,
+        [          CORNER_DOWN_LEFT,  SIDE_DOWN_LINE,           CORNER_DOWN_RIGHT,           FAT_PLUS_UP_LEFT,            FAT_PLUS_UP_RIGHT,      DIAGONAL_CONNECT_LEFT,      DIAGONAL_CONNECT_RIGHT].freeze,
+        [  HORIZONTAL_LINE_END_LEFT, HORIZONTAL_LINE,   HORIZONTAL_LINE_END_RIGHT,         FAT_PLUS_DOWN_LEFT,          FAT_PLUS_DOWN_RIGHT,                        nil,                NO_NEIGHBORS].freeze
+      ].freeze
+      # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
     end
 
     class TilesetLayout
