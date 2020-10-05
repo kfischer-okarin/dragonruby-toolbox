@@ -2,23 +2,29 @@
 # https://github.com/kfischer-okarin/dragonruby-toolbox
 # Released under the MIT License (see repository)
 
-# Require this file to add support for colors to the attr_sprite class macro
-module AttrSprite
-  attr_accessor :color
+# Including this file will automatically extend the attr_sprite class macro
 
-  def r
-    @r || @color&.r
-  end
+module DRT
+  # Adds support for color objects to attr_sprite enhanced classes
+  module AttrSpriteColor
+    attr_accessor :color
 
-  def g
-    @g || @color&.g
-  end
+    def r
+      @r || @color&.r
+    end
 
-  def b
-    @b || @color&.b
-  end
+    def g
+      @g || @color&.g
+    end
 
-  def a
-    @a || @color&.a
+    def b
+      @b || @color&.b
+    end
+
+    def a
+      @a || @color&.a
+    end
   end
 end
+
+AttrSprite.prepend DRT::AttrSpriteColor
