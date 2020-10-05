@@ -577,14 +577,38 @@ module DRT
       # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
     end
 
+    class ConditionMap
+      def initialize
+        @values = []
+      end
+
+      def register(value, condition)
+        @values << { value: value, condition: condition }
+      end
+
+      def fetch(key)
+        matched = @values.find { |value| value[:condition].call key }
+        raise KeyError, "No matching value or key '#{key.inspect}'" unless matched
+
+        matched[:value]
+      end
+
+      def values
+        Enumerator.new do |y|
+          @values.each do |v|
+            y << v[:value]
+          end
+        end
+      end
+    end
+
     class TilesetLayout
       def initialize(tiles)
         @tiles = tiles
 
         @tile_positions = (0..255).map { |bitmask|
-          neighbors = Neighbors.new(bitmask)
-          matching_tile = tiles_with_condition.find { |tile| tile[:condition].call neighbors }
-          [bitmask, matching_tile[:position]]
+          position = tile_positions_by_condition.fetch Neighbors.new(bitmask)
+          [bitmask, position]
         }.to_h
       end
 
@@ -592,7 +616,7 @@ module DRT
         @tile_positions[bitmask]
       end
 
-      def each_tile_with_xy
+      def tiles_with_xy
         Enumerator.new do |y|
           @tiles.reverse.each_with_index { |row, tile_y|
             row.each_with_index { |tile, tile_x|
@@ -606,11 +630,11 @@ module DRT
 
       private
 
-      def tiles_with_condition
-        @tiles_with_condition ||= each_tile_with_xy.map { |tile, tile_x, tile_y|
-          {
-            position: [tile_x, tile_y].freeze,
-            condition: ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
+      def tile_positions_by_condition
+        @tile_positions_by_condition ||= ConditionMap.new.tap { |result|
+          tiles_with_xy.each { |tile, tile_x, tile_y|
+            condition = ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
+            result.register [tile_x, tile_y].freeze, condition
           }
         }
       end
@@ -625,7 +649,7 @@ module DRT
       end
 
       def build_primitives
-        @layout.each_tile_with_xy.flat_map { |tile, tile_x, tile_y|
+        @layout.tiles_with_xy.flat_map { |tile, tile_x, tile_y|
           tile_primitives(tile, tile_x * @size, tile_y * @size)
         }
       end
