@@ -44,7 +44,7 @@ class TransformationsExample
 
   # Subclass Transformations::Base to create your own transformation
   # This one simulates a moveable camera.
-  class Camera < Transformations::Base
+  class Camera < DRT::Transformations::Base
     def initialize(origin)
       @origin = origin
     end
@@ -74,7 +74,7 @@ class TransformationsExample
   end
 
   # Simple night filter
-  class NightFilter < Transformations::Base
+  class NightFilter < DRT::Transformations::Base
     # Overwrite sprite properties you want to transform
     # All other properties are just forwarded
     def r(original)
