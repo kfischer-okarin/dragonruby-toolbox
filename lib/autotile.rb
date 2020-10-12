@@ -212,165 +212,30 @@ module DRT
       end
     end
 
-    # Definition of tile parts that will make up the tiles in the end
-    module TileParts # rubocop:disable Metrics/ModuleLength
-      SINGLE_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
-      }.freeze
-      SINGLE_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
-      }.freeze
-      SINGLE_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
-      }.freeze
-      SINGLE_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
-      }.freeze
+    # Stores values together key conditions.
+    # Fetching a value by a key will return the first value which condition matches the key
+    class ConditionMap
+      def initialize
+        @values = []
+      end
 
-      PLUS_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
-      }.freeze
-      PLUS_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
-      }.freeze
-      PLUS_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
-      }.freeze
-      PLUS_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
-      }.freeze
+      def register(value, condition)
+        @values << { value: value, condition: condition }
+      end
 
-      CORNER_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
-      }.freeze
-      CORNER_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
-      }.freeze
-      CORNER_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
-      }.freeze
-      CORNER_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
-      }.freeze
+      def fetch(key)
+        matched = @values.find { |value| value[:condition].call key }
+        raise KeyError, "No matching value or key '#{key.inspect}'" unless matched
 
-      UP_LEFT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
-      }.freeze
-      UP_RIGHT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
-      }.freeze
-      LEFT_UP = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
-      }.freeze
-      RIGHT_UP = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
-      }.freeze
-      LEFT_DOWN = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
-      }.freeze
-      RIGHT_DOWN = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
-      }.freeze
-      DOWN_LEFT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
-      }.freeze
-      DOWN_RIGHT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
-      }.freeze
+        matched[:value]
+      end
 
-      CENTER_UP_LEFT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.include?(:right, :down, :down_right) }
-      }.freeze
-      CENTER_UP_RIGHT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.include?(:left, :down, :down_left) }
-      }.freeze
-      CENTER_DOWN_LEFT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.include?(:right, :up, :up_right) }
-      }.freeze
-      CENTER_DOWN_RIGHT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.include?(:left, :up, :up_left) }
-      }.freeze
-
-      # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
-      PARTS = [
-        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT].freeze,
-        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT].freeze,
-        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT].freeze,
-        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP].freeze,
-        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN].freeze,
-        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT].freeze
-      ].freeze
-      # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
-
-      def self.definitions_for(corner, part_size)
-        [].tap { |result|
-          PARTS.each.with_index do |row, y|
-            row.each.with_index do |definition, x|
-              next unless definition[:tile_corner] == corner
-
-              result << {
-                condition: definition[:condition],
-                sprite: {
-                  tile_x: part_size * x,
-                  tile_y: part_size * y,
-                  tile_w: part_size,
-                  tile_h: part_size,
-                }
-              }
-            end
+      def values
+        Enumerator.new do |y|
+          @values.each do |v|
+            y << v[:value]
           end
-        }
-      end
-    end
-
-    class TileBuilder
-      def initialize(tile_size)
-        @part_size = tile_size.idiv 2
-        @up_left = TileParts.definitions_for(:up_left, @part_size)
-        @up_right = TileParts.definitions_for(:up_right, @part_size)
-        @down_left = TileParts.definitions_for(:down_left, @part_size)
-        @down_right = TileParts.definitions_for(:down_right, @part_size)
-      end
-
-      def generate(value)
-        base = { w: @part_size, h: @part_size }.sprite
-        [
-          base.merge(x: 0, y: 0).merge(matching_part(@down_left, value)),
-          base.merge(x: @part_size, y: 0).merge(matching_part(@down_right, value)),
-          base.merge(x: 0, y: @part_size).merge(matching_part(@up_left, value)),
-          base.merge(x: @part_size, y: @part_size).merge(matching_part(@up_right, value))
-        ]
-      end
-
-      private
-
-      def matching_part(definitions, value)
-        matched = definitions.find { |definition| definition[:condition].call Neighbors.new(value) }
-        matched[:sprite]
+        end
       end
     end
 
@@ -581,31 +446,7 @@ module DRT
       # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
     end
 
-    class ConditionMap
-      def initialize
-        @values = []
-      end
-
-      def register(value, condition)
-        @values << { value: value, condition: condition }
-      end
-
-      def fetch(key)
-        matched = @values.find { |value| value[:condition].call key }
-        raise KeyError, "No matching value or key '#{key.inspect}'" unless matched
-
-        matched[:value]
-      end
-
-      def values
-        Enumerator.new do |y|
-          @values.each do |v|
-            y << v[:value]
-          end
-        end
-      end
-    end
-
+    # Manages tileset positions for each neighbors combination
     class TilesetLayout
       def initialize(tiles)
         @tiles = tiles
@@ -644,34 +485,185 @@ module DRT
       end
     end
 
+    TILESET_47 = TilesetLayout.new Tiles::TILESET_47
+    FULL_TILESET = TilesetLayout.new Tiles::FULL_TILESET
+
+    # Definition of tile parts that will make up the tiles in the end
+    module TileParts # rubocop:disable Metrics/ModuleLength
+      SINGLE_UP_LEFT = {
+        tile_corner: :up_left,
+        condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
+      }.freeze
+      SINGLE_UP_RIGHT = {
+        tile_corner: :up_right,
+        condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
+      }.freeze
+      SINGLE_DOWN_LEFT = {
+        tile_corner: :down_left,
+        condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
+      }.freeze
+      SINGLE_DOWN_RIGHT = {
+        tile_corner: :down_right,
+        condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
+      }.freeze
+
+      PLUS_UP_LEFT = {
+        tile_corner: :up_left,
+        condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
+      }.freeze
+      PLUS_UP_RIGHT = {
+        tile_corner: :up_right,
+        condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
+      }.freeze
+      PLUS_DOWN_LEFT = {
+        tile_corner: :down_left,
+        condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
+      }.freeze
+      PLUS_DOWN_RIGHT = {
+        tile_corner: :down_right,
+        condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
+      }.freeze
+
+      CORNER_UP_LEFT = {
+        tile_corner: :up_left,
+        condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
+      }.freeze
+      CORNER_UP_RIGHT = {
+        tile_corner: :up_right,
+        condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
+      }.freeze
+      CORNER_DOWN_LEFT = {
+        tile_corner: :down_left,
+        condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
+      }.freeze
+      CORNER_DOWN_RIGHT = {
+        tile_corner: :down_right,
+        condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
+      }.freeze
+
+      UP_LEFT = {
+        tile_corner: :up_right,
+        condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
+      }.freeze
+      UP_RIGHT = {
+        tile_corner: :up_left,
+        condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
+      }.freeze
+      LEFT_UP = {
+        tile_corner: :down_left,
+        condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
+      }.freeze
+      RIGHT_UP = {
+        tile_corner: :down_right,
+        condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
+      }.freeze
+      LEFT_DOWN = {
+        tile_corner: :up_left,
+        condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
+      }.freeze
+      RIGHT_DOWN = {
+        tile_corner: :up_right,
+        condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
+      }.freeze
+      DOWN_LEFT = {
+        tile_corner: :down_right,
+        condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
+      }.freeze
+      DOWN_RIGHT = {
+        tile_corner: :down_left,
+        condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
+      }.freeze
+
+      CENTER_UP_LEFT = {
+        tile_corner: :down_right,
+        condition: ->(n) { n.include?(:right, :down, :down_right) }
+      }.freeze
+      CENTER_UP_RIGHT = {
+        tile_corner: :down_left,
+        condition: ->(n) { n.include?(:left, :down, :down_left) }
+      }.freeze
+      CENTER_DOWN_LEFT = {
+        tile_corner: :up_right,
+        condition: ->(n) { n.include?(:right, :up, :up_right) }
+      }.freeze
+      CENTER_DOWN_RIGHT = {
+        tile_corner: :up_left,
+        condition: ->(n) { n.include?(:left, :up, :up_left) }
+      }.freeze
+
+      # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
+      PARTS = [
+        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT].freeze,
+        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT].freeze,
+        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT].freeze,
+        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP].freeze,
+        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN].freeze,
+        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT].freeze
+      ].freeze
+      # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
+
+      def self.parts_for(corner)
+        ConditionMap.new.tap { |result|
+          PARTS.each.with_index do |row, part_y|
+            row.each.with_index do |definition, part_x|
+              next unless definition[:tile_corner] == corner
+
+              result.register [part_x, part_y], definition[:condition]
+            end
+          end
+        }
+      end
+
+      UP_LEFT = parts_for :up_left
+      UP_RIGHT = parts_for :up_right
+      DOWN_LEFT = parts_for :down_left
+      DOWN_RIGHT = parts_for :down_right
+    end
+
+    # Constructs primitives for a tileset
     class TilesetBuilder
       def initialize(tilesource_path, size, layout)
         @tilesource_path = tilesource_path
         @size = size
         @layout = layout
-        @tile_builder = TileBuilder.new(size)
+        @tile_builder = TileBuilder.new(tilesource_path, size)
       end
 
       def build_primitives
         @layout.tiles_with_xy.flat_map { |tile, tile_x, tile_y|
-          tile_primitives(tile, tile_x * @size, tile_y * @size)
+          offset = [tile_x * @size, tile_y * @size]
+          @tile_builder.build_primitives(tile[:value], offset)
         }
       end
 
-      private
+      # Constructs primitives for a single tile
+      class TileBuilder
+        def initialize(path, tile_size)
+          @part_size = tile_size.idiv 2
+          @tile_part_base = { w: @part_size, h: @part_size, tile_w: @part_size, tile_h: @part_size, path: path }.sprite
 
-      def tile_primitives(tile, offset_x, offset_y)
-        @tile_builder.generate(tile[:value]).tap { |tile_parts|
-          tile_parts.each do |part|
-            part[:x] += offset_x
-            part[:y] += offset_y
-            part[:path] = @tilesource_path
-          end
-        }
+          # Tile parts for a particular tile corner and corresponding offset inside tile
+          # rubocop:disable Layout/ExtraSpacing
+          @parts_for_each_corner = [
+            [TileParts::UP_LEFT,   [0, @part_size]], [TileParts::UP_RIGHT,   [@part_size, @part_size]],
+            [TileParts::DOWN_LEFT, [0,          0]], [TileParts::DOWN_RIGHT, [@part_size,          0]]
+          ]
+          # rubocop:enable Layout/ExtraSpacing
+        end
+
+        def build_primitives(value, tileset_offset)
+          @parts_for_each_corner.map { |tile_parts, part_offset|
+            tile_part_position = tile_parts.fetch Neighbors.new(value)
+
+            @tile_part_base.merge(
+              x: part_offset.x + tileset_offset.x,
+              y: part_offset.y + tileset_offset.y,
+              tile_x: tile_part_position.x * @part_size,
+              tile_y: tile_part_position.y * @part_size
+            )
+          }
+        end
       end
     end
-
-    TILESET_47 = TilesetLayout.new Tiles::TILESET_47
-    FULL_TILESET = TilesetLayout.new Tiles::FULL_TILESET
   end
 end
