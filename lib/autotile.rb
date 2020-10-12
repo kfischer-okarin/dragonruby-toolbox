@@ -169,7 +169,7 @@ module DRT
     # @param tileset_layout [TilesetLayout] (optional) Custom tileset layout used for generation
     #   See explanation in {#initialize}.
     def self.generate_tileset_primitives(path, size, tileset_layout = nil)
-      TilesetBuilder.new(path, size, tileset_layout || TILESET_47).build_primitives
+      TilesetSource::TilesetBuilder.new(path, size, tileset_layout || TILESET_47).build_primitives
     end
 
     private
@@ -487,152 +487,137 @@ module DRT
       }.freeze
     }.freeze
 
-    # Definition of tile parts that will make up the tiles in the end
-    module TileParts # rubocop:disable Metrics/ModuleLength
-      SINGLE_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
-      }.freeze
-      SINGLE_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
-      }.freeze
-      SINGLE_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
-      }.freeze
-      SINGLE_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
-      }.freeze
+    module TilesetSource
+      # Definition of tile parts that will make up the tiles in the end
+      module TileParts # rubocop:disable Metrics/ModuleLength
+        SINGLE_UP_LEFT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
+        }.freeze
+        SINGLE_UP_RIGHT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
+        }.freeze
+        SINGLE_DOWN_LEFT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
+        }.freeze
+        SINGLE_DOWN_RIGHT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
+        }.freeze
 
-      PLUS_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
-      }.freeze
-      PLUS_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
-      }.freeze
-      PLUS_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
-      }.freeze
-      PLUS_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
-      }.freeze
+        PLUS_UP_LEFT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
+        }.freeze
+        PLUS_UP_RIGHT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
+        }.freeze
+        PLUS_DOWN_LEFT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
+        }.freeze
+        PLUS_DOWN_RIGHT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
+        }.freeze
 
-      CORNER_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
-      }.freeze
-      CORNER_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
-      }.freeze
-      CORNER_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
-      }.freeze
-      CORNER_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
-      }.freeze
+        CORNER_UP_LEFT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
+        }.freeze
+        CORNER_UP_RIGHT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
+        }.freeze
+        CORNER_DOWN_LEFT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
+        }.freeze
+        CORNER_DOWN_RIGHT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
+        }.freeze
 
-      UP_LEFT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
-      }.freeze
-      UP_RIGHT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
-      }.freeze
-      LEFT_UP = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
-      }.freeze
-      RIGHT_UP = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
-      }.freeze
-      LEFT_DOWN = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
-      }.freeze
-      RIGHT_DOWN = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
-      }.freeze
-      DOWN_LEFT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
-      }.freeze
-      DOWN_RIGHT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
-      }.freeze
+        UP_LEFT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
+        }.freeze
+        UP_RIGHT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
+        }.freeze
+        LEFT_UP = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
+        }.freeze
+        RIGHT_UP = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
+        }.freeze
+        LEFT_DOWN = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
+        }.freeze
+        RIGHT_DOWN = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
+        }.freeze
+        DOWN_LEFT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
+        }.freeze
+        DOWN_RIGHT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
+        }.freeze
 
-      CENTER_UP_LEFT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.include?(:right, :down, :down_right) }
-      }.freeze
-      CENTER_UP_RIGHT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.include?(:left, :down, :down_left) }
-      }.freeze
-      CENTER_DOWN_LEFT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.include?(:right, :up, :up_right) }
-      }.freeze
-      CENTER_DOWN_RIGHT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.include?(:left, :up, :up_left) }
-      }.freeze
+        CENTER_UP_LEFT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.include?(:right, :down, :down_right) }
+        }.freeze
+        CENTER_UP_RIGHT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.include?(:left, :down, :down_left) }
+        }.freeze
+        CENTER_DOWN_LEFT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.include?(:right, :up, :up_right) }
+        }.freeze
+        CENTER_DOWN_RIGHT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.include?(:left, :up, :up_left) }
+        }.freeze
 
-      # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
-      PARTS = [
-        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT].freeze,
-        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT].freeze,
-        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT].freeze,
-        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP].freeze,
-        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN].freeze,
-        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT].freeze
-      ].freeze
-      # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
+        # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
+        PARTS = [
+          [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT].freeze,
+          [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT].freeze,
+          [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT].freeze,
+          [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP].freeze,
+          [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN].freeze,
+          [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT].freeze
+        ].freeze
+        # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
 
-      def self.parts_for(corner)
-        ConditionMap.new.tap { |result|
-          PARTS.each.with_index do |row, part_y|
-            row.each.with_index do |definition, part_x|
-              next unless definition[:tile_corner] == corner
+        def self.parts_for(corner)
+          ConditionMap.new.tap { |result|
+            PARTS.each.with_index do |row, part_y|
+              row.each.with_index do |definition, part_x|
+                next unless definition[:tile_corner] == corner
 
-              result.register [part_x, part_y], definition[:condition]
+                result.register [part_x, part_y], definition[:condition]
+              end
             end
-          end
-        }
-      end
+          }
+        end
 
-      UP_LEFT = parts_for :up_left
-      UP_RIGHT = parts_for :up_right
-      DOWN_LEFT = parts_for :down_left
-      DOWN_RIGHT = parts_for :down_right
-    end
-
-    # Constructs primitives for a tileset
-    class TilesetBuilder
-      def initialize(tilesource_path, size, layout)
-        @tilesource_path = tilesource_path
-        @size = size
-        @layout = layout
-        @tile_builder = TileBuilder.new(tilesource_path, size)
-      end
-
-      def build_primitives
-        @layout.tiles_with_xy.flat_map { |tile, tile_x, tile_y|
-          offset = [tile_x * @size, tile_y * @size]
-          @tile_builder.build_primitives(tile[:value], offset)
-        }
+        UP_LEFT = parts_for :up_left
+        UP_RIGHT = parts_for :up_right
+        DOWN_LEFT = parts_for :down_left
+        DOWN_RIGHT = parts_for :down_right
       end
 
       # Constructs primitives for a single tile
@@ -660,6 +645,23 @@ module DRT
               tile_x: tile_part_position.x * @part_size,
               tile_y: tile_part_position.y * @part_size
             )
+          }
+        end
+      end
+
+      # Constructs primitives for a tileset
+      class TilesetBuilder
+        def initialize(tilesource_path, size, layout)
+          @tilesource_path = tilesource_path
+          @size = size
+          @layout = layout
+          @tile_builder = TileBuilder.new(tilesource_path, size)
+        end
+
+        def build_primitives
+          @layout.tiles_with_xy.flat_map { |tile, tile_x, tile_y|
+            offset = [tile_x * @size, tile_y * @size]
+            @tile_builder.build_primitives(tile[:value], offset)
           }
         end
       end
