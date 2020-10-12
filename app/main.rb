@@ -14,6 +14,9 @@ require 'app/low_resolution.rb'
 require 'lib/autotile.rb'
 require 'app/autotiles.rb'
 
+require 'lib/circle.rb'
+require 'app/circles.rb'
+
 def tick(args)
   if $example
     $example.tick(args)
@@ -29,7 +32,8 @@ EXAMPLES = [
   { name: 'Colors (HSV / HSL)', example: ColorsHsvHslExample.new },
   { name: 'Colors (Accessor for attr_sprite)', example: ColorAccessorExample.new },
   { name: 'Low Resolution Canvas', example: LowResolutionExample.new },
-  { name: 'Autotiles', example: AutotileExample.new }
+  { name: 'Autotiles', example: AutotileExample.new },
+  { name: 'Circles', example: CirclesExample.new }
 ]
 
 BUTTONS = ('a'..'z').to_a
