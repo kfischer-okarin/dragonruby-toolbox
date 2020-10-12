@@ -91,7 +91,7 @@ module DRT
 
       class << self
         def new(*directions)
-          bitmask = Bitmask.from(*directions)
+          bitmask = Autotile.bitmask(*directions)
           @values ||= {}
           @values[bitmask] ||= super(bitmask)
         end
@@ -102,22 +102,22 @@ module DRT
       end
 
       def +(other)
-        other_bitmask = Bitmask.from(other)
+        other_bitmask = Autotile.bitmask(other)
         Neighbors.new(@bitmask | other_bitmask)
       end
 
       def -(other)
-        other_bitmask = Bitmask.from(other)
+        other_bitmask = Autotile.bitmask(other)
         Neighbors.new(@bitmask & (255 - other_bitmask))
       end
 
       def include?(*directions)
-        other_bitmask = Bitmask.from(*directions)
+        other_bitmask = Autotile.bitmask(*directions)
         @bitmask & other_bitmask == other_bitmask
       end
 
       def exclude?(*directions)
-        other_bitmask = Bitmask.from(*directions)
+        other_bitmask = Autotile.bitmask(*directions)
         (@bitmask & other_bitmask).zero?
       end
 
@@ -172,6 +172,22 @@ module DRT
       TilesetSource::TilesetBuilder.new(path, size, tileset_layout || TILESET_47).build_primitives
     end
 
+    BITMASK_CONVERTERS = {
+      Integer => ->(values) { values[0] },
+      Array => ->(values) { values.map { |v| Neighbors::DIRECTION_VECTORS[v] }.inject(0) { |sum, n| sum + n } },
+      Symbol => ->(values) { values.map { |v| Neighbors::DIRECTIONS[v] }.inject(0) { |sum, n| sum + n } },
+      NilClass => ->(_) { 0 }
+    }.freeze
+
+    # Convert values to neighbor bitmask
+    def self.bitmask(*values)
+      BITMASK_CONVERTERS.each do |type, convert|
+        return convert.call(values) if values[0].is_a? type
+      end
+
+      raise "Value '#{values}' cannot be converted to bitmask"
+    end
+
     private
 
     def calc_sprites(tileset)
@@ -193,23 +209,6 @@ module DRT
         source_w: @size,
         source_h: @size
       }.freeze
-    end
-
-    module Bitmask
-      def self.from(*values)
-        case values[0]
-        when Integer
-          values[0]
-        when Array
-          values.map { |v| Neighbors::DIRECTION_VECTORS[v] }.inject(0) { |sum, n| sum + n }
-        when Symbol
-          values.map { |v| Neighbors::DIRECTIONS[v] }.inject(0) { |sum, n| sum + n }
-        when nil
-          0
-        else
-          raise "Value '#{values}' cannot be converted to bitmask"
-        end
-      end
     end
 
     # Stores values together key conditions.
@@ -242,189 +241,189 @@ module DRT
     # Tiledefinitions and layout for Autotile tileset
     module Tileset47 # rubocop:disable Metrics/ModuleLength
       CORNER_UP_LEFT = {
-        value: Bitmask.from(:right, :down_right, :down),
-        forbidden: Bitmask.from(:up, :left)
+        value: Autotile.bitmask(:right, :down_right, :down),
+        forbidden: Autotile.bitmask(:up, :left)
       }.freeze
       CORNER_UP_RIGHT = {
-        value: Bitmask.from(:left, :down_left, :down),
-        forbidden: Bitmask.from(:up, :right)
+        value: Autotile.bitmask(:left, :down_left, :down),
+        forbidden: Autotile.bitmask(:up, :right)
       }.freeze
       CORNER_DOWN_LEFT = {
-        value: Bitmask.from(:right, :up_right, :up),
-        forbidden: Bitmask.from(:down, :left)
+        value: Autotile.bitmask(:right, :up_right, :up),
+        forbidden: Autotile.bitmask(:down, :left)
       }.freeze
       CORNER_DOWN_RIGHT = {
-        value: Bitmask.from(:left, :up_left, :up),
-        forbidden: Bitmask.from(:down, :right)
+        value: Autotile.bitmask(:left, :up_left, :up),
+        forbidden: Autotile.bitmask(:down, :right)
       }.freeze
 
       SIDE_UP = {
-        value: Bitmask.from(:left, :down_left, :down, :down_right, :right),
-        forbidden: Bitmask.from(:up)
+        value: Autotile.bitmask(:left, :down_left, :down, :down_right, :right),
+        forbidden: Autotile.bitmask(:up)
       }.freeze
       SIDE_DOWN = {
-        value: Bitmask.from(:left, :up_left, :up, :up_right, :right),
-        forbidden: Bitmask.from(:down)
+        value: Autotile.bitmask(:left, :up_left, :up, :up_right, :right),
+        forbidden: Autotile.bitmask(:down)
       }.freeze
       SIDE_LEFT = {
-        value: Bitmask.from(:up, :up_right, :right, :down_right, :down),
-        forbidden: Bitmask.from(:left)
+        value: Autotile.bitmask(:up, :up_right, :right, :down_right, :down),
+        forbidden: Autotile.bitmask(:left)
       }.freeze
       SIDE_RIGHT = {
-        value: Bitmask.from(:up, :up_left, :left, :down_left, :down),
-        forbidden: Bitmask.from(:right)
+        value: Autotile.bitmask(:up, :up_left, :left, :down_left, :down),
+        forbidden: Autotile.bitmask(:right)
       }.freeze
 
       CENTER = {
-        value: Bitmask.from(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
+        value: Autotile.bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
       }.freeze
 
       CORNER_UP_LEFT_LINE_LEFT = {
-        value: Bitmask.from(:left, :down, :down_right, :right),
-        forbidden: Bitmask.from(:down_left, :up)
+        value: Autotile.bitmask(:left, :down, :down_right, :right),
+        forbidden: Autotile.bitmask(:down_left, :up)
       }.freeze
       CORNER_UP_LEFT_LINE_UP = {
-        value: Bitmask.from(:up, :down, :down_right, :right),
-        forbidden: Bitmask.from(:up_right, :left)
+        value: Autotile.bitmask(:up, :down, :down_right, :right),
+        forbidden: Autotile.bitmask(:up_right, :left)
       }.freeze
       CORNER_UP_RIGHT_LINE_UP = {
-        value: Bitmask.from(:up, :left, :down_left, :down),
-        forbidden: Bitmask.from(:up_left, :right)
+        value: Autotile.bitmask(:up, :left, :down_left, :down),
+        forbidden: Autotile.bitmask(:up_left, :right)
       }.freeze
       CORNER_UP_RIGHT_LINE_RIGHT = {
-        value: Bitmask.from(:right, :left, :down_left, :down),
-        forbidden: Bitmask.from(:down_right, :up)
+        value: Autotile.bitmask(:right, :left, :down_left, :down),
+        forbidden: Autotile.bitmask(:down_right, :up)
       }.freeze
       CORNER_DOWN_LEFT_LINE_DOWN = {
-        value: Bitmask.from(:down, :right, :up_right, :up),
-        forbidden: Bitmask.from(:down_right, :left)
+        value: Autotile.bitmask(:down, :right, :up_right, :up),
+        forbidden: Autotile.bitmask(:down_right, :left)
       }.freeze
       CORNER_DOWN_LEFT_LINE_LEFT = {
-        value: Bitmask.from(:left, :right, :up_right, :up),
-        forbidden: Bitmask.from(:up_left, :down)
+        value: Autotile.bitmask(:left, :right, :up_right, :up),
+        forbidden: Autotile.bitmask(:up_left, :down)
       }.freeze
       CORNER_DOWN_RIGHT_LINE_RIGHT = {
-        value: Bitmask.from(:right, :up, :up_left, :left),
-        forbidden: Bitmask.from(:up_right, :down)
+        value: Autotile.bitmask(:right, :up, :up_left, :left),
+        forbidden: Autotile.bitmask(:up_right, :down)
       }.freeze
       CORNER_DOWN_RIGHT_LINE_DOWN = {
-        value: Bitmask.from(:down, :up, :up_left, :left),
-        forbidden: Bitmask.from(:down_left, :right)
+        value: Autotile.bitmask(:down, :up, :up_left, :left),
+        forbidden: Autotile.bitmask(:down_left, :right)
       }.freeze
 
       CORNER_UP_LEFT_TWO_LINES = {
-        value: Bitmask.from(:left, :up, :right, :down_right, :down)
+        value: Autotile.bitmask(:left, :up, :right, :down_right, :down)
       }.freeze
       CORNER_UP_RIGHT_TWO_LINES = {
-        value: Bitmask.from(:right, :up, :left, :down_left, :down)
+        value: Autotile.bitmask(:right, :up, :left, :down_left, :down)
       }.freeze
       CORNER_DOWN_LEFT_TWO_LINES = {
-        value: Bitmask.from(:left, :down, :right, :up_right, :up)
+        value: Autotile.bitmask(:left, :down, :right, :up_right, :up)
       }.freeze
       CORNER_DOWN_RIGHT_TWO_LINES = {
-        value: Bitmask.from(:right, :down, :left, :up_left, :up)
+        value: Autotile.bitmask(:right, :down, :left, :up_left, :up)
       }.freeze
 
       SIDE_UP_LINE = {
-        value: Bitmask.from(:left, :up, :right, :down_right, :down, :down_left)
+        value: Autotile.bitmask(:left, :up, :right, :down_right, :down, :down_left)
       }.freeze
       SIDE_LEFT_LINE = {
-        value: Bitmask.from(:up, :left, :down, :down_right, :right, :up_right)
+        value: Autotile.bitmask(:up, :left, :down, :down_right, :right, :up_right)
       }.freeze
       SIDE_RIGHT_LINE = {
-        value: Bitmask.from(:up, :right, :down, :down_left, :left, :up_left)
+        value: Autotile.bitmask(:up, :right, :down, :down_left, :left, :up_left)
       }.freeze
       SIDE_DOWN_LINE = {
-        value: Bitmask.from(:left, :down, :right, :up_right, :up, :up_left)
+        value: Autotile.bitmask(:left, :down, :right, :up_right, :up, :up_left)
       }.freeze
 
       L_DOWN_RIGHT = {
-        value: Bitmask.from(:right, :down),
-        forbidden: Bitmask.from(:left, :up, :down_right)
+        value: Autotile.bitmask(:right, :down),
+        forbidden: Autotile.bitmask(:left, :up, :down_right)
       }.freeze
       L_DOWN_LEFT = {
-        value: Bitmask.from(:left, :down),
-        forbidden: Bitmask.from(:up, :right, :down_left)
+        value: Autotile.bitmask(:left, :down),
+        forbidden: Autotile.bitmask(:up, :right, :down_left)
       }.freeze
       L_UP_RIGHT = {
-        value: Bitmask.from(:right, :up),
-        forbidden: Bitmask.from(:left, :down, :up_right)
+        value: Autotile.bitmask(:right, :up),
+        forbidden: Autotile.bitmask(:left, :down, :up_right)
       }.freeze
       L_UP_LEFT = {
-        value: Bitmask.from(:left, :up),
-        forbidden: Bitmask.from(:right, :down, :up_left)
+        value: Autotile.bitmask(:left, :up),
+        forbidden: Autotile.bitmask(:right, :down, :up_left)
       }.freeze
 
       T_DOWN_LEFT_RIGHT = {
-        value: Bitmask.from(:left, :down, :right),
-        forbidden: Bitmask.from(:up, :down_left, :down_right)
+        value: Autotile.bitmask(:left, :down, :right),
+        forbidden: Autotile.bitmask(:up, :down_left, :down_right)
       }.freeze
       T_UP_DOWN_RIGHT = {
-        value: Bitmask.from(:right, :up, :down),
-        forbidden: Bitmask.from(:left, :up_right, :down_right)
+        value: Autotile.bitmask(:right, :up, :down),
+        forbidden: Autotile.bitmask(:left, :up_right, :down_right)
       }.freeze
       T_UP_DOWN_LEFT = {
-        value: Bitmask.from(:left, :up, :down),
-        forbidden: Bitmask.from(:right, :up_left, :down_left)
+        value: Autotile.bitmask(:left, :up, :down),
+        forbidden: Autotile.bitmask(:right, :up_left, :down_left)
       }.freeze
       T_UP_LEFT_RIGHT = {
-        value: Bitmask.from(:left, :up, :right),
-        forbidden: Bitmask.from(:down, :up_left, :up_right)
+        value: Autotile.bitmask(:left, :up, :right),
+        forbidden: Autotile.bitmask(:down, :up_left, :up_right)
       }.freeze
 
       PLUS = {
-        value: Bitmask.from(:left, :right, :up, :down)
+        value: Autotile.bitmask(:left, :right, :up, :down)
       }.freeze
 
       FAT_PLUS_UP_LEFT = {
-        value: Bitmask.from(:left, :up, :up_right, :right, :down_right, :down, :down_left)
+        value: Autotile.bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left)
       }.freeze
       FAT_PLUS_UP_RIGHT = {
-        value: Bitmask.from(:right, :up, :up_left, :left, :down_left, :down, :down_right)
+        value: Autotile.bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right)
       }.freeze
       FAT_PLUS_DOWN_LEFT = {
-        value: Bitmask.from(:left, :down, :down_right, :right, :up_right, :up, :up_left)
+        value: Autotile.bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left)
       }.freeze
       FAT_PLUS_DOWN_RIGHT = {
-        value: Bitmask.from(:right, :down, :down_left, :left, :up_left, :up, :up_right)
+        value: Autotile.bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right)
       }.freeze
 
       DIAGONAL_CONNECT_RIGHT = {
-        value: Bitmask.from(:up, :up_right, :right, :down, :down_left, :left)
+        value: Autotile.bitmask(:up, :up_right, :right, :down, :down_left, :left)
       }.freeze
       DIAGONAL_CONNECT_LEFT = {
-        value: Bitmask.from(:up, :up_left, :left, :down, :down_right, :right)
+        value: Autotile.bitmask(:up, :up_left, :left, :down, :down_right, :right)
       }.freeze
 
       VERTICAL_LINE_END_UP = {
-        value: Bitmask.from(:down),
-        forbidden: Bitmask.from(:up, :left, :right)
+        value: Autotile.bitmask(:down),
+        forbidden: Autotile.bitmask(:up, :left, :right)
       }.freeze
       VERTICAL_LINE = {
-        value: Bitmask.from(:up, :down),
-        forbidden: Bitmask.from(:left, :right)
+        value: Autotile.bitmask(:up, :down),
+        forbidden: Autotile.bitmask(:left, :right)
       }.freeze
       VERTICAL_LINE_END_DOWN = {
-        value: Bitmask.from(:up),
-        forbidden: Bitmask.from(:left, :down, :right)
+        value: Autotile.bitmask(:up),
+        forbidden: Autotile.bitmask(:left, :down, :right)
       }.freeze
 
       HORIZONTAL_LINE_END_LEFT = {
-        value: Bitmask.from(:right),
-        forbidden: Bitmask.from(:up, :left, :down)
+        value: Autotile.bitmask(:right),
+        forbidden: Autotile.bitmask(:up, :left, :down)
       }.freeze
       HORIZONTAL_LINE = {
-        value: Bitmask.from(:left, :right),
-        forbidden: Bitmask.from(:up, :down)
+        value: Autotile.bitmask(:left, :right),
+        forbidden: Autotile.bitmask(:up, :down)
       }.freeze
       HORIZONTAL_LINE_END_RIGHT = {
-        value: Bitmask.from(:left),
-        forbidden: Bitmask.from(:up, :right, :down)
+        value: Autotile.bitmask(:left),
+        forbidden: Autotile.bitmask(:up, :right, :down)
       }.freeze
 
       NO_NEIGHBORS = {
         value: 0,
-        forbidden: Bitmask.from(:up, :down, :right, :left)
+        forbidden: Autotile.bitmask(:up, :down, :right, :left)
       }.freeze
 
       # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
