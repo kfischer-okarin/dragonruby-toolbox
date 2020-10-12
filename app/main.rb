@@ -1,3 +1,4 @@
+# rubocop:disable all
 require 'lib/transformations.rb'
 require 'app/transformations.rb'
 

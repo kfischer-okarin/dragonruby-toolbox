@@ -1,6 +1,7 @@
 # require 'lib/color.rb'
 # require 'lib/attr_sprite_accessor.rb'
 
+# rubocop:disable all
 class ColorAccessorExample
   def tick(args)
     args.state.dragon ||= create_dragon
@@ -11,10 +12,10 @@ class ColorAccessorExample
     args.outputs.labels << [10, 600, "Press 1, 2, 3 or 4 to change dragon color"]
 
     # attr_sprite enhances classes support a color setter method when lib/attr_sprite_color.rb is included
-    args.state.dragon.color = Color.new(255, 255, 255) if args.inputs.keyboard.key_down.one
-    args.state.dragon.color = Color.new(200, 200, 0) if args.inputs.keyboard.key_down.two
-    args.state.dragon.color = Color.new(30, 100, 200) if args.inputs.keyboard.key_down.three
-    args.state.dragon.color = Color.new(100, 200, 100) if args.inputs.keyboard.key_down.four
+    args.state.dragon.color = DRT::Color.new(255, 255, 255) if args.inputs.keyboard.key_down.one
+    args.state.dragon.color = DRT::Color.new(200, 200, 0) if args.inputs.keyboard.key_down.two
+    args.state.dragon.color = DRT::Color.new(30, 100, 200) if args.inputs.keyboard.key_down.three
+    args.state.dragon.color = DRT::Color.new(100, 200, 100) if args.inputs.keyboard.key_down.four
 
     args.outputs.sprites << args.state.dragon
   end

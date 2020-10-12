@@ -1,7 +1,9 @@
 # require 'lib/low_resolution_canvas.rb'
 
+# rubocop:disable all
 class AutotileExample
   TILE_SIZE = 32
+  RENDER_SIZE = 32
 
   def tick(args)
     # Uncomment to use a handmade 47-tile tileset
@@ -14,7 +16,7 @@ class AutotileExample
       args.state.initialized[:tileset] = true
     else
       mouse = args.inputs.mouse
-      tile_coord = [mouse.point.x.idiv(32), mouse.point.y.idiv(32)]
+      tile_coord = [mouse.point.x.idiv(RENDER_SIZE), mouse.point.y.idiv(RENDER_SIZE)]
       if mouse.button_left && !args.state.tiles.key?(tile_coord)
         args.state.tiles[tile_coord] = initialize_tile_instance(args, tile_coord)
         add_tile_as_neighbor_of_all_neighbors(args, tile_coord)
@@ -44,7 +46,7 @@ class AutotileExample
   end
 
   def initialize_tile_instance(args, tile_coord)
-    args.state.tile.create_instance(x: tile_coord.x * 32, y: tile_coord.y * 32).tap { |tile_instance|
+    args.state.tile.create_instance(x: tile_coord.x * RENDER_SIZE, y: tile_coord.y * RENDER_SIZE, w: RENDER_SIZE, h: RENDER_SIZE).tap { |tile_instance|
       each_neighbor(args, tile_coord) do |neighbor_coord, direction|
         tile_instance.neighbors += direction
       end

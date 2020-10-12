@@ -3,6 +3,7 @@
 # Released under the MIT License (see repository)
 
 module DRT
+  # Autotile that renders in different ways depending on how many neighbors have the same tiles
   class Autotile
     attr_reader :path, :size
 
@@ -13,19 +14,22 @@ module DRT
     #
     # @param path [String] Path to the tileset file
     #   The tileset should contain 47 tiles arranged in a 7x7 grid that cover all important neighbor combinations.
-    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an example of such a
-    #   tileset.
+    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an
+    #   example of such a tileset.
     # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
     # @param tileset_layout [TilesetLayout, nil] Custom tileset configuration (optional)
-    #   Instead of the default tileset configuration you can specify your own custom tileset layout. By default {TILESET_47} is used.
-    #   There is also a second configuration {FULL_TILESET} which specifies all 256 tiles for all neighbor combinations in a 16x16 grid.
+    #   Instead of the default tileset configuration you can specify your own custom tileset layout. By default
+    #   {TILESET_47} is used.
+    #   There is also a second configuration {FULL_TILESET} which specifies all 256 tiles for all neighbor combinations
+    #   in a 16x16 grid.
     def initialize(path, size, tileset_layout = nil)
       @path = path
       @size = size
       @sprites = calc_sprites(tileset_layout || TILESET_47)
     end
 
-    # Creates a renderable tile instance with all attr_sprite methods and a neighbors setter which will update the rendered tile.
+    # Creates a renderable tile instance with all attr_sprite methods and a neighbors setter which will update the
+    # rendered tile.
     #
     # @example Create a tile instance
     #  tile.create_instance(x: 200, y: 200)
@@ -59,8 +63,8 @@ module DRT
       @sprites[neighbors]
     end
 
-    # This class is used to specify which of the neighbors of the current tile are containing the same tile to determine the right tile
-    # sprite to be rendered.
+    # This class is used to specify which of the neighbors of the current tile are containing the same tile to determine
+    # the right tile sprite to be rendered.
     #
     # Pass in directions as symbols (see {DIRECTIONS}) or as vectors (see {DIRECTION_VECTORS}).
     #
@@ -70,7 +74,8 @@ module DRT
     # @example Specify neighbors with vectors
     #   Neighbors.new([0, 1], [0, -1])
     #
-    # You can use the `+`` and `-` methods to calculate a new neighbors value by adding/removing the specified direction.
+    # You can use the `+`` and `-` methods to calculate a new neighbors value by adding/removing the specified
+    # direction.
     #
     # @example Add a direction to a neighbors value
     #   neighbors = Neighbors.new(:up)
@@ -90,7 +95,7 @@ module DRT
 
       class << self
         def new(*directions)
-          bitmask = Bitmask.from(*directions)
+          bitmask = Autotile.bitmask(*directions)
           @values ||= {}
           @values[bitmask] ||= super(bitmask)
         end
@@ -100,24 +105,24 @@ module DRT
         @bitmask = bitmask
       end
 
-      def +(direction)
-        other_bitmask = Bitmask.from(direction)
+      def +(other)
+        other_bitmask = Autotile.bitmask(other)
         Neighbors.new(@bitmask | other_bitmask)
       end
 
-      def -(direction)
-        other_bitmask = Bitmask.from(direction)
+      def -(other)
+        other_bitmask = Autotile.bitmask(other)
         Neighbors.new(@bitmask & (255 - other_bitmask))
       end
 
       def include?(*directions)
-        other_bitmask = Bitmask.from(*directions)
+        other_bitmask = Autotile.bitmask(*directions)
         @bitmask & other_bitmask == other_bitmask
       end
 
       def exclude?(*directions)
-        other_bitmask = Bitmask.from(*directions)
-        @bitmask & other_bitmask == 0
+        other_bitmask = Autotile.bitmask(*directions)
+        (@bitmask & other_bitmask).zero?
       end
 
       def serialize
@@ -133,7 +138,8 @@ module DRT
     # Renderable Autotile instance
     # It supports all attr_sprites methods and you can directly set and update the neighbors value on this object
     class Instance
-      attr_accessor :x, :y, :w, :h, :r, :g, :b, :a, :angle, :flip_horizontally, :flip_vertically, :angle_anchor_x, :angle_anchor_y
+      attr_accessor :x, :y, :w, :h, :r, :g, :b, :a, :angle, :flip_horizontally, :flip_vertically, :angle_anchor_x,
+                    :angle_anchor_y
 
       attr_reader :tile_x, :tile_y, :tile_w, :tile_h, :source_x, :source_y, :source_w, :source_h, :path,
                   :neighbors
@@ -162,13 +168,29 @@ module DRT
     #
     # @param path [String] Path to the autotile source image file
     #   This source image a layout inspired by the RPG Maker tileset format.
-    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/grass-autotile.png for an example of such an
-    #   image.
+    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/grass-autotile.png for an example
+    #   of such an image.
     # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
     # @param tileset_layout [TilesetLayout] (optional) Custom tileset layout used for generation
     #   See explanation in {#initialize}.
     def self.generate_tileset_primitives(path, size, tileset_layout = nil)
-      (tileset_layout || TILESET_47).generate_primitives(path, size)
+      TilesetSource::TilesetBuilder.new(path, size, tileset_layout || TILESET_47).build_primitives
+    end
+
+    BITMASK_CONVERTERS = {
+      Integer => ->(values) { values[0] },
+      Array => ->(values) { values.map { |v| Neighbors::DIRECTION_VECTORS[v] }.inject(0) { |sum, n| sum + n } },
+      Symbol => ->(values) { values.map { |v| Neighbors::DIRECTIONS[v] }.inject(0) { |sum, n| sum + n } },
+      NilClass => ->(_) { 0 }
+    }.freeze
+
+    # Convert values to neighbor bitmask
+    def self.bitmask(*values)
+      BITMASK_CONVERTERS.each do |type, convert|
+        return convert.call(values) if values[0].is_a? type
+      end
+
+      raise "Value '#{values}' cannot be converted to bitmask"
     end
 
     private
@@ -177,404 +199,259 @@ module DRT
       tiles = {}
       (0..255).map { |bitmask|
         tile_position = tileset.tile_position_for(bitmask)
-        tiles[tile_position] ||= {
-          path: @path,
-          w: @size,
-          h: @size,
-          source_x: tile_position.x * @size,
-          source_y: tile_position.y * @size,
-          source_w: @size,
-          source_h: @size
-        }.freeze
+        tiles[tile_position] ||= tile_for_position(tile_position)
         [Neighbors.new(bitmask), tiles[tile_position]]
       }.to_h
     end
 
-    module Bitmask
-      def self.from(*values)
-        case values[0]
-        when Fixnum
-          values[0]
-        when Array
-          values.map { |v| Neighbors::DIRECTION_VECTORS[v] }.inject(0) { |sum, n| sum + n }
-        when Symbol
-          values.map { |v| Neighbors::DIRECTIONS[v] }.inject(0) { |sum, n| sum + n }
-        when nil
-          0
-        else
-          raise "Value '#{values}' cannot be converted to bitmask"
+    def tile_for_position(position)
+      {
+        path: @path,
+        w: @size,
+        h: @size,
+        source_x: position.x * @size,
+        source_y: position.y * @size,
+        source_w: @size,
+        source_h: @size
+      }.freeze
+    end
+
+    # Stores values together key conditions.
+    # Fetching a value by a key will return the first value which condition matches the key
+    class ConditionMap
+      def initialize
+        @values = []
+      end
+
+      def register(value, condition)
+        @values << { value: value, condition: condition }
+      end
+
+      def fetch(key)
+        matched = @values.find { |value| value[:condition].call key }
+        raise KeyError, "No matching value or key '#{key.inspect}'" unless matched
+
+        matched[:value]
+      end
+
+      def values
+        Enumerator.new do |y|
+          @values.each do |v|
+            y << v[:value]
+          end
         end
       end
     end
 
-    # Definition of tile parts that will make up the tiles in the end
-    module TileParts
-      SINGLE_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
-      }
-      SINGLE_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
-      }
-      PLUS_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
-      }
-      PLUS_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
-      }
-      SINGLE_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
-      }
-      SINGLE_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
-      }
-      PLUS_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
-      }
-      PLUS_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
-      }
+    # Tiledefinitions and layout for Autotile tileset
+    module Tileset47 # rubocop:disable Metrics/ModuleLength
       CORNER_UP_LEFT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
-      }
-      UP_LEFT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
-      }
-      UP_RIGHT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
-      }
-      CORNER_UP_RIGHT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
-      }
-      LEFT_UP = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
-      }
-      CENTER_UP_LEFT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.include?(:right, :down, :down_right) }
-      }
-      CENTER_UP_RIGHT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.include?(:left, :down, :down_left) }
-      }
-      RIGHT_UP = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
-      }
-      LEFT_DOWN = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
-      }
-      CENTER_DOWN_LEFT = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.include?(:right, :up, :up_right) }
-      }
-      CENTER_DOWN_RIGHT = {
-        tile_corner: :up_left,
-        condition: ->(n) { n.include?(:left, :up, :up_left) }
-      }
-      RIGHT_DOWN = {
-        tile_corner: :up_right,
-        condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
-      }
-      CORNER_DOWN_LEFT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
-      }
-      DOWN_LEFT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
-      }
-      DOWN_RIGHT = {
-        tile_corner: :down_left,
-        condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
-      }
-      CORNER_DOWN_RIGHT = {
-        tile_corner: :down_right,
-        condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
-      }
-
-      PARTS = [
-        [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT],
-        [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT],
-        [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT],
-        [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP],
-        [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN],
-        [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT]
-      ]
-
-      def self.definitions_for(corner, part_size)
-        [].tap { |result|
-          PARTS.each.with_index do |row, y|
-            row.each.with_index do |definition, x|
-              next unless definition[:tile_corner] == corner
-
-              result << {
-                condition: definition[:condition],
-                sprite: {
-                  tile_x: part_size * x,
-                  tile_y: part_size * y,
-                  tile_w: part_size,
-                  tile_h: part_size,
-                }
-              }
-            end
-          end
-        }
-      end
-    end
-
-    class TileBuilder
-      def initialize(tile_size)
-        @part_size = tile_size.idiv 2
-        @up_left = TileParts.definitions_for(:up_left, @part_size)
-        @up_right = TileParts.definitions_for(:up_right, @part_size)
-        @down_left = TileParts.definitions_for(:down_left, @part_size)
-        @down_right = TileParts.definitions_for(:down_right, @part_size)
-      end
-
-      def generate(value)
-        base = { w: @part_size, h: @part_size }.sprite
-        [
-          base.merge(x: 0, y: 0).merge(matching_part(@down_left, value)),
-          base.merge(x: @part_size, y: 0).merge(matching_part(@down_right, value)),
-          base.merge(x: 0, y: @part_size).merge(matching_part(@up_left, value)),
-          base.merge(x: @part_size, y: @part_size).merge(matching_part(@up_right, value))
-        ]
-      end
-
-      private
-
-      def matching_part(definitions, value)
-        matched = definitions.find { |definition| definition[:condition].call Neighbors.new(value) }
-        matched[:sprite]
-      end
-    end
-
-    module Tiles
-      CORNER_UP_LEFT = {
-        value: Bitmask.from(:right, :down_right, :down),
-        forbidden: Bitmask.from(:up, :left)
+        value: Autotile.bitmask(:right, :down_right, :down),
+        forbidden: Autotile.bitmask(:up, :left)
       }.freeze
       CORNER_UP_RIGHT = {
-        value: Bitmask.from(:left, :down_left, :down),
-        forbidden: Bitmask.from(:up, :right)
+        value: Autotile.bitmask(:left, :down_left, :down),
+        forbidden: Autotile.bitmask(:up, :right)
       }.freeze
       CORNER_DOWN_LEFT = {
-        value: Bitmask.from(:right, :up_right, :up),
-        forbidden: Bitmask.from(:down, :left)
+        value: Autotile.bitmask(:right, :up_right, :up),
+        forbidden: Autotile.bitmask(:down, :left)
       }.freeze
       CORNER_DOWN_RIGHT = {
-        value: Bitmask.from(:left, :up_left, :up),
-        forbidden: Bitmask.from(:down, :right)
+        value: Autotile.bitmask(:left, :up_left, :up),
+        forbidden: Autotile.bitmask(:down, :right)
       }.freeze
 
       SIDE_UP = {
-        value: Bitmask.from(:left, :down_left, :down, :down_right, :right),
-        forbidden: Bitmask.from(:up)
+        value: Autotile.bitmask(:left, :down_left, :down, :down_right, :right),
+        forbidden: Autotile.bitmask(:up)
       }.freeze
       SIDE_DOWN = {
-        value: Bitmask.from(:left, :up_left, :up, :up_right, :right),
-        forbidden: Bitmask.from(:down)
+        value: Autotile.bitmask(:left, :up_left, :up, :up_right, :right),
+        forbidden: Autotile.bitmask(:down)
       }.freeze
       SIDE_LEFT = {
-        value: Bitmask.from(:up, :up_right, :right, :down_right, :down),
-        forbidden: Bitmask.from(:left)
+        value: Autotile.bitmask(:up, :up_right, :right, :down_right, :down),
+        forbidden: Autotile.bitmask(:left)
       }.freeze
       SIDE_RIGHT = {
-        value: Bitmask.from(:up, :up_left, :left, :down_left, :down),
-        forbidden: Bitmask.from(:right)
+        value: Autotile.bitmask(:up, :up_left, :left, :down_left, :down),
+        forbidden: Autotile.bitmask(:right)
       }.freeze
 
       CENTER = {
-        value: Bitmask.from(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
+        value: Autotile.bitmask(:up, :up_right, :right, :down_right, :down, :down_left, :left, :up_left)
       }.freeze
 
       CORNER_UP_LEFT_LINE_LEFT = {
-        value: Bitmask.from(:left, :down, :down_right, :right),
-        forbidden: Bitmask.from(:down_left, :up)
+        value: Autotile.bitmask(:left, :down, :down_right, :right),
+        forbidden: Autotile.bitmask(:down_left, :up)
       }.freeze
       CORNER_UP_LEFT_LINE_UP = {
-        value: Bitmask.from(:up, :down, :down_right, :right),
-        forbidden: Bitmask.from(:up_right, :left)
+        value: Autotile.bitmask(:up, :down, :down_right, :right),
+        forbidden: Autotile.bitmask(:up_right, :left)
       }.freeze
       CORNER_UP_RIGHT_LINE_UP = {
-        value: Bitmask.from(:up, :left, :down_left, :down),
-        forbidden: Bitmask.from(:up_left, :right)
+        value: Autotile.bitmask(:up, :left, :down_left, :down),
+        forbidden: Autotile.bitmask(:up_left, :right)
       }.freeze
       CORNER_UP_RIGHT_LINE_RIGHT = {
-        value: Bitmask.from(:right, :left, :down_left, :down),
-        forbidden: Bitmask.from(:down_right, :up)
+        value: Autotile.bitmask(:right, :left, :down_left, :down),
+        forbidden: Autotile.bitmask(:down_right, :up)
       }.freeze
       CORNER_DOWN_LEFT_LINE_DOWN = {
-        value: Bitmask.from(:down, :right, :up_right, :up),
-        forbidden: Bitmask.from(:down_right, :left)
+        value: Autotile.bitmask(:down, :right, :up_right, :up),
+        forbidden: Autotile.bitmask(:down_right, :left)
       }.freeze
       CORNER_DOWN_LEFT_LINE_LEFT = {
-        value: Bitmask.from(:left, :right, :up_right, :up),
-        forbidden: Bitmask.from(:up_left, :down)
+        value: Autotile.bitmask(:left, :right, :up_right, :up),
+        forbidden: Autotile.bitmask(:up_left, :down)
       }.freeze
       CORNER_DOWN_RIGHT_LINE_RIGHT = {
-        value: Bitmask.from(:right, :up, :up_left, :left),
-        forbidden: Bitmask.from(:up_right, :down)
+        value: Autotile.bitmask(:right, :up, :up_left, :left),
+        forbidden: Autotile.bitmask(:up_right, :down)
       }.freeze
       CORNER_DOWN_RIGHT_LINE_DOWN = {
-        value: Bitmask.from(:down, :up, :up_left, :left),
-        forbidden: Bitmask.from(:down_left, :right)
+        value: Autotile.bitmask(:down, :up, :up_left, :left),
+        forbidden: Autotile.bitmask(:down_left, :right)
       }.freeze
 
       CORNER_UP_LEFT_TWO_LINES = {
-        value: Bitmask.from(:left, :up, :right, :down_right, :down)
+        value: Autotile.bitmask(:left, :up, :right, :down_right, :down)
       }.freeze
       CORNER_UP_RIGHT_TWO_LINES = {
-        value: Bitmask.from(:right, :up, :left, :down_left, :down)
+        value: Autotile.bitmask(:right, :up, :left, :down_left, :down)
       }.freeze
       CORNER_DOWN_LEFT_TWO_LINES = {
-        value: Bitmask.from(:left, :down, :right, :up_right, :up)
+        value: Autotile.bitmask(:left, :down, :right, :up_right, :up)
       }.freeze
       CORNER_DOWN_RIGHT_TWO_LINES = {
-        value: Bitmask.from(:right, :down, :left, :up_left, :up)
+        value: Autotile.bitmask(:right, :down, :left, :up_left, :up)
       }.freeze
 
       SIDE_UP_LINE = {
-        value: Bitmask.from(:left, :up, :right, :down_right, :down, :down_left)
+        value: Autotile.bitmask(:left, :up, :right, :down_right, :down, :down_left)
       }.freeze
       SIDE_LEFT_LINE = {
-        value: Bitmask.from(:up, :left, :down, :down_right, :right, :up_right)
+        value: Autotile.bitmask(:up, :left, :down, :down_right, :right, :up_right)
       }.freeze
       SIDE_RIGHT_LINE = {
-        value: Bitmask.from(:up, :right, :down, :down_left, :left, :up_left)
+        value: Autotile.bitmask(:up, :right, :down, :down_left, :left, :up_left)
       }.freeze
       SIDE_DOWN_LINE = {
-        value: Bitmask.from(:left, :down, :right, :up_right, :up, :up_left)
+        value: Autotile.bitmask(:left, :down, :right, :up_right, :up, :up_left)
       }.freeze
 
       L_DOWN_RIGHT = {
-        value: Bitmask.from(:right, :down),
-        forbidden: Bitmask.from(:left, :up, :down_right)
+        value: Autotile.bitmask(:right, :down),
+        forbidden: Autotile.bitmask(:left, :up, :down_right)
       }.freeze
       L_DOWN_LEFT = {
-        value: Bitmask.from(:left, :down),
-        forbidden: Bitmask.from(:up, :right, :down_left)
+        value: Autotile.bitmask(:left, :down),
+        forbidden: Autotile.bitmask(:up, :right, :down_left)
       }.freeze
       L_UP_RIGHT = {
-        value: Bitmask.from(:right, :up),
-        forbidden: Bitmask.from(:left, :down, :up_right)
+        value: Autotile.bitmask(:right, :up),
+        forbidden: Autotile.bitmask(:left, :down, :up_right)
       }.freeze
       L_UP_LEFT = {
-        value: Bitmask.from(:left, :up),
-        forbidden: Bitmask.from(:right, :down, :up_left)
+        value: Autotile.bitmask(:left, :up),
+        forbidden: Autotile.bitmask(:right, :down, :up_left)
       }.freeze
 
       T_DOWN_LEFT_RIGHT = {
-        value: Bitmask.from(:left, :down, :right),
-        forbidden: Bitmask.from(:up, :down_left, :down_right)
+        value: Autotile.bitmask(:left, :down, :right),
+        forbidden: Autotile.bitmask(:up, :down_left, :down_right)
       }.freeze
       T_UP_DOWN_RIGHT = {
-        value: Bitmask.from(:right, :up, :down),
-        forbidden: Bitmask.from(:left, :up_right, :down_right)
+        value: Autotile.bitmask(:right, :up, :down),
+        forbidden: Autotile.bitmask(:left, :up_right, :down_right)
       }.freeze
       T_UP_DOWN_LEFT = {
-        value: Bitmask.from(:left, :up, :down),
-        forbidden: Bitmask.from(:right, :up_left, :down_left)
+        value: Autotile.bitmask(:left, :up, :down),
+        forbidden: Autotile.bitmask(:right, :up_left, :down_left)
       }.freeze
       T_UP_LEFT_RIGHT = {
-        value: Bitmask.from(:left, :up, :right),
-        forbidden: Bitmask.from(:down, :up_left, :up_right)
+        value: Autotile.bitmask(:left, :up, :right),
+        forbidden: Autotile.bitmask(:down, :up_left, :up_right)
       }.freeze
 
       PLUS = {
-        value: Bitmask.from(:left, :right, :up, :down)
+        value: Autotile.bitmask(:left, :right, :up, :down)
       }.freeze
 
       FAT_PLUS_UP_LEFT = {
-        value: Bitmask.from(:left, :up, :up_right, :right, :down_right, :down, :down_left)
+        value: Autotile.bitmask(:left, :up, :up_right, :right, :down_right, :down, :down_left)
       }.freeze
       FAT_PLUS_UP_RIGHT = {
-        value: Bitmask.from(:right, :up, :up_left, :left, :down_left, :down, :down_right)
+        value: Autotile.bitmask(:right, :up, :up_left, :left, :down_left, :down, :down_right)
       }.freeze
       FAT_PLUS_DOWN_LEFT = {
-        value: Bitmask.from(:left, :down, :down_right, :right, :up_right, :up, :up_left)
+        value: Autotile.bitmask(:left, :down, :down_right, :right, :up_right, :up, :up_left)
       }.freeze
       FAT_PLUS_DOWN_RIGHT = {
-        value: Bitmask.from(:right, :down, :down_left, :left, :up_left, :up, :up_right)
+        value: Autotile.bitmask(:right, :down, :down_left, :left, :up_left, :up, :up_right)
       }.freeze
 
       DIAGONAL_CONNECT_RIGHT = {
-        value: Bitmask.from(:up, :up_right, :right, :down, :down_left, :left)
+        value: Autotile.bitmask(:up, :up_right, :right, :down, :down_left, :left)
       }.freeze
       DIAGONAL_CONNECT_LEFT = {
-        value: Bitmask.from(:up, :up_left, :left, :down, :down_right, :right)
+        value: Autotile.bitmask(:up, :up_left, :left, :down, :down_right, :right)
       }.freeze
 
       VERTICAL_LINE_END_UP = {
-        value: Bitmask.from(:down),
-        forbidden: Bitmask.from(:up, :left, :right)
+        value: Autotile.bitmask(:down),
+        forbidden: Autotile.bitmask(:up, :left, :right)
       }.freeze
       VERTICAL_LINE = {
-        value: Bitmask.from(:up, :down),
-        forbidden: Bitmask.from(:left, :right)
+        value: Autotile.bitmask(:up, :down),
+        forbidden: Autotile.bitmask(:left, :right)
       }.freeze
       VERTICAL_LINE_END_DOWN = {
-        value: Bitmask.from(:up),
-        forbidden: Bitmask.from(:left, :down, :right)
+        value: Autotile.bitmask(:up),
+        forbidden: Autotile.bitmask(:left, :down, :right)
       }.freeze
 
       HORIZONTAL_LINE_END_LEFT = {
-        value: Bitmask.from(:right),
-        forbidden: Bitmask.from(:up, :left, :down)
+        value: Autotile.bitmask(:right),
+        forbidden: Autotile.bitmask(:up, :left, :down)
       }.freeze
       HORIZONTAL_LINE = {
-        value: Bitmask.from(:left, :right),
-        forbidden: Bitmask.from(:up, :down)
+        value: Autotile.bitmask(:left, :right),
+        forbidden: Autotile.bitmask(:up, :down)
       }.freeze
       HORIZONTAL_LINE_END_RIGHT = {
-        value: Bitmask.from(:left),
-        forbidden: Bitmask.from(:up, :right, :down)
+        value: Autotile.bitmask(:left),
+        forbidden: Autotile.bitmask(:up, :right, :down)
       }.freeze
 
       NO_NEIGHBORS = {
         value: 0,
-        forbidden: Bitmask.from(:up, :down, :right, :left)
+        forbidden: Autotile.bitmask(:up, :down, :right, :left)
       }.freeze
 
-      FULL_TILESET = (0...16).map { |row|
-        start = row * 16
-        (start...(start + 16)).map { |value|
-          { value: value }.freeze
-        }.freeze
-      }.freeze
-
-      TILESET_47 = [
-        [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP],
-        [                 SIDE_LEFT,          CENTER,                  SIDE_RIGHT,            T_UP_DOWN_RIGHT,                         PLUS,             T_UP_DOWN_LEFT,               VERTICAL_LINE],
-        [CORNER_DOWN_LEFT_TWO_LINES,       SIDE_DOWN, CORNER_DOWN_RIGHT_TWO_LINES,                 L_UP_RIGHT,              T_UP_LEFT_RIGHT,                  L_UP_LEFT,      VERTICAL_LINE_END_DOWN],
-        [            CORNER_UP_LEFT,    SIDE_UP_LINE,             CORNER_UP_RIGHT,   CORNER_UP_LEFT_LINE_LEFT,      CORNER_UP_RIGHT_LINE_UP,     CORNER_UP_LEFT_LINE_UP,  CORNER_UP_RIGHT_LINE_RIGHT],
-        [            SIDE_LEFT_LINE,             nil,             SIDE_RIGHT_LINE, CORNER_DOWN_LEFT_LINE_DOWN, CORNER_DOWN_RIGHT_LINE_RIGHT, CORNER_DOWN_LEFT_LINE_LEFT, CORNER_DOWN_RIGHT_LINE_DOWN],
-        [          CORNER_DOWN_LEFT,  SIDE_DOWN_LINE,           CORNER_DOWN_RIGHT,           FAT_PLUS_UP_LEFT,            FAT_PLUS_UP_RIGHT,      DIAGONAL_CONNECT_LEFT,      DIAGONAL_CONNECT_RIGHT],
-        [  HORIZONTAL_LINE_END_LEFT, HORIZONTAL_LINE,   HORIZONTAL_LINE_END_RIGHT,         FAT_PLUS_DOWN_LEFT,          FAT_PLUS_DOWN_RIGHT,                        nil,                NO_NEIGHBORS]
-      ].map(&:freeze).freeze
+      # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
+      LAYOUT = [
+        [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP].freeze,
+        [                 SIDE_LEFT,          CENTER,                  SIDE_RIGHT,            T_UP_DOWN_RIGHT,                         PLUS,             T_UP_DOWN_LEFT,               VERTICAL_LINE].freeze,
+        [CORNER_DOWN_LEFT_TWO_LINES,       SIDE_DOWN, CORNER_DOWN_RIGHT_TWO_LINES,                 L_UP_RIGHT,              T_UP_LEFT_RIGHT,                  L_UP_LEFT,      VERTICAL_LINE_END_DOWN].freeze,
+        [            CORNER_UP_LEFT,    SIDE_UP_LINE,             CORNER_UP_RIGHT,   CORNER_UP_LEFT_LINE_LEFT,      CORNER_UP_RIGHT_LINE_UP,     CORNER_UP_LEFT_LINE_UP,  CORNER_UP_RIGHT_LINE_RIGHT].freeze,
+        [            SIDE_LEFT_LINE,             nil,             SIDE_RIGHT_LINE, CORNER_DOWN_LEFT_LINE_DOWN, CORNER_DOWN_RIGHT_LINE_RIGHT, CORNER_DOWN_LEFT_LINE_LEFT, CORNER_DOWN_RIGHT_LINE_DOWN].freeze,
+        [          CORNER_DOWN_LEFT,  SIDE_DOWN_LINE,           CORNER_DOWN_RIGHT,           FAT_PLUS_UP_LEFT,            FAT_PLUS_UP_RIGHT,      DIAGONAL_CONNECT_LEFT,      DIAGONAL_CONNECT_RIGHT].freeze,
+        [  HORIZONTAL_LINE_END_LEFT, HORIZONTAL_LINE,   HORIZONTAL_LINE_END_RIGHT,         FAT_PLUS_DOWN_LEFT,          FAT_PLUS_DOWN_RIGHT,                        nil,                NO_NEIGHBORS].freeze
+      ].freeze
+      # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
     end
 
+    # Manages tileset positions for each neighbors combination
     class TilesetLayout
       def initialize(tiles)
         @tiles = tiles
 
         @tile_positions = (0..255).map { |bitmask|
-          tile = tiles_with_condition.find { |tile| tile[:condition].call Neighbors.new(bitmask) }
-          [bitmask, tile[:position]]
+          position = tile_positions_by_condition.fetch Neighbors.new(bitmask)
+          [bitmask, position]
         }.to_h
       end
 
@@ -582,43 +459,216 @@ module DRT
         @tile_positions[bitmask]
       end
 
-      def generate_primitives(tile_source_path, tile_size)
-        tile_builder = TileBuilder.new(tile_size)
+      def tiles_with_xy
+        Enumerator.new do |y|
+          @tiles.reverse.each_with_index { |row, tile_y|
+            row.each_with_index { |tile, tile_x|
+              next unless tile
 
-        @tiles.reverse.flat_map.with_index { |row, tile_y|
-          row.map.with_index { |tile, tile_x|
-            next unless tile
-
-            x = tile_x * tile_size
-            y = tile_y * tile_size
-            tile_builder.generate(tile[:value]).tap { |tile_parts|
-              tile_parts.each do |part|
-                part[:x] += x
-                part[:y] += y
-                part[:path] = tile_source_path
-              end
+              y.yield(tile, tile_x, tile_y)
             }
           }
-        }
+        end
       end
 
       private
 
-      def tiles_with_condition
-        @tiles_with_condition ||= @tiles.reverse.flat_map.with_index { |row, y|
-          row.map.with_index { |tile, x|
-            next nil unless tile
-
-            {
-              position: [x, y].freeze,
-              condition: ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
-            }
+      def tile_positions_by_condition
+        @tile_positions_by_condition ||= ConditionMap.new.tap { |result|
+          tiles_with_xy.each { |tile, tile_x, tile_y|
+            condition = ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
+            result.register [tile_x, tile_y].freeze, condition
           }
-        }.compact
+        }
       end
     end
 
-    TILESET_47 = TilesetLayout.new Tiles::TILESET_47
-    FULL_TILESET = TilesetLayout.new Tiles::FULL_TILESET
+    TILESET_47 = TilesetLayout.new Tileset47::LAYOUT
+    FULL_TILESET = TilesetLayout.new (0...16).map { |row|
+      start = row * 16
+      (start...(start + 16)).map { |value|
+        { value: value }.freeze
+      }.freeze
+    }.freeze
+
+    module TilesetSource
+      # Definition of tile parts that will make up the tiles in the end
+      module TileParts # rubocop:disable Metrics/ModuleLength
+        SINGLE_UP_LEFT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:up, :left) && (n.exclude?(:right) || n.exclude?(:down)) }
+        }.freeze
+        SINGLE_UP_RIGHT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:up, :right) && (n.exclude?(:left) || n.exclude?(:down)) }
+        }.freeze
+        SINGLE_DOWN_LEFT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:down, :left) && (n.exclude?(:right) || n.exclude?(:up)) }
+        }.freeze
+        SINGLE_DOWN_RIGHT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:down, :right) && (n.exclude?(:left) || n.exclude?(:up)) }
+        }.freeze
+
+        PLUS_UP_LEFT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.include?(:up, :left) && n.exclude?(:up_left) }
+        }.freeze
+        PLUS_UP_RIGHT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.include?(:up, :right) && n.exclude?(:up_right) }
+        }.freeze
+        PLUS_DOWN_LEFT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.include?(:down, :left) && n.exclude?(:down_left) }
+        }.freeze
+        PLUS_DOWN_RIGHT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.include?(:down, :right) && n.exclude?(:down_right) }
+        }.freeze
+
+        CORNER_UP_LEFT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:up, :left) && n.include?(:right, :down) }
+        }.freeze
+        CORNER_UP_RIGHT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:up, :right) && n.include?(:left, :down) }
+        }.freeze
+        CORNER_DOWN_LEFT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:down, :left) && n.include?(:right, :up) }
+        }.freeze
+        CORNER_DOWN_RIGHT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:down, :right) && n.include?(:left, :up) }
+        }.freeze
+
+        UP_LEFT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:up) && n.include?(:right) }
+        }.freeze
+        UP_RIGHT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:up) && n.include?(:left) }
+        }.freeze
+        LEFT_UP = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:left) && n.include?(:down) }
+        }.freeze
+        RIGHT_UP = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:right) && n.include?(:down) }
+        }.freeze
+        LEFT_DOWN = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.exclude?(:left) && n.include?(:up) }
+        }.freeze
+        RIGHT_DOWN = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.exclude?(:right) && n.include?(:up) }
+        }.freeze
+        DOWN_LEFT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.exclude?(:down) && n.include?(:right) }
+        }.freeze
+        DOWN_RIGHT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.exclude?(:down) && n.include?(:left) }
+        }.freeze
+
+        CENTER_UP_LEFT = {
+          tile_corner: :down_right,
+          condition: ->(n) { n.include?(:right, :down, :down_right) }
+        }.freeze
+        CENTER_UP_RIGHT = {
+          tile_corner: :down_left,
+          condition: ->(n) { n.include?(:left, :down, :down_left) }
+        }.freeze
+        CENTER_DOWN_LEFT = {
+          tile_corner: :up_right,
+          condition: ->(n) { n.include?(:right, :up, :up_right) }
+        }.freeze
+        CENTER_DOWN_RIGHT = {
+          tile_corner: :up_left,
+          condition: ->(n) { n.include?(:left, :up, :up_left) }
+        }.freeze
+
+        # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
+        PARTS = [
+          [  SINGLE_UP_LEFT,   SINGLE_UP_RIGHT,      PLUS_UP_LEFT,     PLUS_UP_RIGHT].freeze,
+          [SINGLE_DOWN_LEFT, SINGLE_DOWN_RIGHT,    PLUS_DOWN_LEFT,   PLUS_DOWN_RIGHT].freeze,
+          [  CORNER_UP_LEFT,           UP_LEFT,          UP_RIGHT,   CORNER_UP_RIGHT].freeze,
+          [         LEFT_UP,    CENTER_UP_LEFT,   CENTER_UP_RIGHT,          RIGHT_UP].freeze,
+          [       LEFT_DOWN,  CENTER_DOWN_LEFT, CENTER_DOWN_RIGHT,        RIGHT_DOWN].freeze,
+          [CORNER_DOWN_LEFT,         DOWN_LEFT,        DOWN_RIGHT, CORNER_DOWN_RIGHT].freeze
+        ].freeze
+        # rubocop:enable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing
+
+        def self.parts_for(corner)
+          ConditionMap.new.tap { |result|
+            PARTS.each.with_index do |row, part_y|
+              row.each.with_index do |definition, part_x|
+                next unless definition[:tile_corner] == corner
+
+                result.register [part_x, part_y], definition[:condition]
+              end
+            end
+          }
+        end
+
+        UP_LEFT = parts_for :up_left
+        UP_RIGHT = parts_for :up_right
+        DOWN_LEFT = parts_for :down_left
+        DOWN_RIGHT = parts_for :down_right
+      end
+
+      # Constructs primitives for a single tile
+      class TileBuilder
+        def initialize(path, tile_size)
+          @part_size = tile_size.idiv 2
+          @tile_part_base = { w: @part_size, h: @part_size, tile_w: @part_size, tile_h: @part_size, path: path }.sprite
+
+          # Tile parts for a particular tile corner and corresponding offset inside tile
+          # rubocop:disable Layout/ExtraSpacing
+          @parts_for_each_corner = [
+            [TileParts::UP_LEFT,   [0, @part_size]], [TileParts::UP_RIGHT,   [@part_size, @part_size]],
+            [TileParts::DOWN_LEFT, [0,          0]], [TileParts::DOWN_RIGHT, [@part_size,          0]]
+          ]
+          # rubocop:enable Layout/ExtraSpacing
+        end
+
+        def build_primitives(value, tileset_offset)
+          @parts_for_each_corner.map { |tile_parts, part_offset|
+            tile_part_position = tile_parts.fetch Neighbors.new(value)
+
+            @tile_part_base.merge(
+              x: part_offset.x + tileset_offset.x,
+              y: part_offset.y + tileset_offset.y,
+              tile_x: tile_part_position.x * @part_size,
+              tile_y: tile_part_position.y * @part_size
+            )
+          }
+        end
+      end
+
+      # Constructs primitives for a tileset
+      class TilesetBuilder
+        def initialize(tilesource_path, size, layout)
+          @tilesource_path = tilesource_path
+          @size = size
+          @layout = layout
+          @tile_builder = TileBuilder.new(tilesource_path, size)
+        end
+
+        def build_primitives
+          @layout.tiles_with_xy.flat_map { |tile, tile_x, tile_y|
+            offset = [tile_x * @size, tile_y * @size]
+            @tile_builder.build_primitives(tile[:value], offset)
+          }
+        end
+      end
+    end
   end
 end
