@@ -14,19 +14,22 @@ module DRT
     #
     # @param path [String] Path to the tileset file
     #   The tileset should contain 47 tiles arranged in a 7x7 grid that cover all important neighbor combinations.
-    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an example of such a
-    #   tileset.
+    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/autotile-tileset.png for an
+    #   example of such a tileset.
     # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
     # @param tileset_layout [TilesetLayout, nil] Custom tileset configuration (optional)
-    #   Instead of the default tileset configuration you can specify your own custom tileset layout. By default {TILESET_47} is used.
-    #   There is also a second configuration {FULL_TILESET} which specifies all 256 tiles for all neighbor combinations in a 16x16 grid.
+    #   Instead of the default tileset configuration you can specify your own custom tileset layout. By default
+    #   {TILESET_47} is used.
+    #   There is also a second configuration {FULL_TILESET} which specifies all 256 tiles for all neighbor combinations
+    #   in a 16x16 grid.
     def initialize(path, size, tileset_layout = nil)
       @path = path
       @size = size
       @sprites = calc_sprites(tileset_layout || TILESET_47)
     end
 
-    # Creates a renderable tile instance with all attr_sprite methods and a neighbors setter which will update the rendered tile.
+    # Creates a renderable tile instance with all attr_sprite methods and a neighbors setter which will update the
+    # rendered tile.
     #
     # @example Create a tile instance
     #  tile.create_instance(x: 200, y: 200)
@@ -60,8 +63,8 @@ module DRT
       @sprites[neighbors]
     end
 
-    # This class is used to specify which of the neighbors of the current tile are containing the same tile to determine the right tile
-    # sprite to be rendered.
+    # This class is used to specify which of the neighbors of the current tile are containing the same tile to determine
+    # the right tile sprite to be rendered.
     #
     # Pass in directions as symbols (see {DIRECTIONS}) or as vectors (see {DIRECTION_VECTORS}).
     #
@@ -71,7 +74,8 @@ module DRT
     # @example Specify neighbors with vectors
     #   Neighbors.new([0, 1], [0, -1])
     #
-    # You can use the `+`` and `-` methods to calculate a new neighbors value by adding/removing the specified direction.
+    # You can use the `+`` and `-` methods to calculate a new neighbors value by adding/removing the specified
+    # direction.
     #
     # @example Add a direction to a neighbors value
     #   neighbors = Neighbors.new(:up)
@@ -134,7 +138,8 @@ module DRT
     # Renderable Autotile instance
     # It supports all attr_sprites methods and you can directly set and update the neighbors value on this object
     class Instance
-      attr_accessor :x, :y, :w, :h, :r, :g, :b, :a, :angle, :flip_horizontally, :flip_vertically, :angle_anchor_x, :angle_anchor_y
+      attr_accessor :x, :y, :w, :h, :r, :g, :b, :a, :angle, :flip_horizontally, :flip_vertically, :angle_anchor_x,
+                    :angle_anchor_y
 
       attr_reader :tile_x, :tile_y, :tile_w, :tile_h, :source_x, :source_y, :source_w, :source_h, :path,
                   :neighbors
@@ -163,8 +168,8 @@ module DRT
     #
     # @param path [String] Path to the autotile source image file
     #   This source image a layout inspired by the RPG Maker tileset format.
-    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/grass-autotile.png for an example of such an
-    #   image.
+    #   See https://github.com/kfischer-okarin/dragonruby-toolbox/blob/master/sprites/grass-autotile.png for an example
+    #   of such an image.
     # @param size [Integer] The width/height of one tile in the tileset (assuming square tiles)
     # @param tileset_layout [TilesetLayout] (optional) Custom tileset layout used for generation
     #   See explanation in {#initialize}.
