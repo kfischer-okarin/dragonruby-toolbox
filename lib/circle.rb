@@ -62,25 +62,25 @@ module DRT
       end
 
       def render_quarter
-        segment_lines = @renderer_class.new(@radius).lines
-        segment_lines + reverse_xy(segment_lines)
-      end
-
-      def reverse_xy(lines)
-        lines.map { |line| [line.y1 - 1, line.x1 + 1, line.y2 - 1, line.x2 + 1, line.r, line.g, line.b].line }
+        @renderer_class.new(@radius).primitives
       end
     end
 
     class BorderRenderer
-      attr_reader :lines
-
       def initialize(radius)
         @radius = radius
         @lines = []
-        build
+        build_eighth
+        @lines += reverse_xy(@lines)
       end
 
-      def build
+      def primitives
+        @lines
+      end
+
+      private
+
+      def build_eighth
         while line_needed?
           next_line = build_next_line
           if line_is_growing?(next_line)
@@ -124,16 +124,22 @@ module DRT
         @lines = @lines[0..index_of_first_shorter_line] # Drop all lines after that line
         @lines.last.y2 = @lines.last.y1 + min_length # Adjust it to the minimum length
       end
+
+      def reverse_xy(lines)
+        lines.map { |line| [line.y1 - 1, line.x1 + 1, line.y2 - 1, line.x2 + 1, line.r, line.g, line.b].line }
+      end
     end
 
     class SolidRenderer < BorderRenderer
-      def build
+      def build_eighth
         super
-        @lines = @lines.flat_map { |line|
-          (line.y1...line.y2).map { |y|
-            [0, y, line.x + 1, y, 255, 255, 255].line
-          }
+        @lines = @lines.map { |line|
+          [0, line.y1 - 1, line.x + 1, line.y2 - line.y1, 255, 255, 255].solid
         }
+      end
+
+      def reverse_xy(solids)
+        solids.map { |solid| [solid.y, solid.x, solid.h, solid.w, solid.r, solid.g, solid.b].solid }
       end
     end
 
