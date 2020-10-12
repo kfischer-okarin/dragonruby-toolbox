@@ -239,7 +239,8 @@ module DRT
       end
     end
 
-    module Tiles # rubocop:disable Metrics/ModuleLength
+    # Tiledefinitions and layout for Autotile tileset
+    module Tileset47 # rubocop:disable Metrics/ModuleLength
       CORNER_UP_LEFT = {
         value: Bitmask.from(:right, :down_right, :down),
         forbidden: Bitmask.from(:up, :left)
@@ -426,15 +427,8 @@ module DRT
         forbidden: Bitmask.from(:up, :down, :right, :left)
       }.freeze
 
-      FULL_TILESET = (0...16).map { |row|
-        start = row * 16
-        (start...(start + 16)).map { |value|
-          { value: value }.freeze
-        }.freeze
-      }.freeze
-
       # rubocop:disable Layout/SpaceInsideArrayLiteralBrackets, Layout/ExtraSpacing, Layout/LineLength
-      TILESET_47 = [
+      LAYOUT = [
         [  CORNER_UP_LEFT_TWO_LINES,         SIDE_UP,   CORNER_UP_RIGHT_TWO_LINES,               L_DOWN_RIGHT,            T_DOWN_LEFT_RIGHT,                L_DOWN_LEFT,        VERTICAL_LINE_END_UP].freeze,
         [                 SIDE_LEFT,          CENTER,                  SIDE_RIGHT,            T_UP_DOWN_RIGHT,                         PLUS,             T_UP_DOWN_LEFT,               VERTICAL_LINE].freeze,
         [CORNER_DOWN_LEFT_TWO_LINES,       SIDE_DOWN, CORNER_DOWN_RIGHT_TWO_LINES,                 L_UP_RIGHT,              T_UP_LEFT_RIGHT,                  L_UP_LEFT,      VERTICAL_LINE_END_DOWN].freeze,
@@ -485,8 +479,13 @@ module DRT
       end
     end
 
-    TILESET_47 = TilesetLayout.new Tiles::TILESET_47
-    FULL_TILESET = TilesetLayout.new Tiles::FULL_TILESET
+    TILESET_47 = TilesetLayout.new Tileset47::LAYOUT
+    FULL_TILESET = TilesetLayout.new (0...16).map { |row|
+      start = row * 16
+      (start...(start + 16)).map { |value|
+        { value: value }.freeze
+      }.freeze
+    }.freeze
 
     # Definition of tile parts that will make up the tiles in the end
     module TileParts # rubocop:disable Metrics/ModuleLength
