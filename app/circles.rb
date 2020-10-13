@@ -23,6 +23,9 @@ class CirclesExample
     if args.inputs.keyboard.key_down.space
       args.state.circle[:filled] = !args.state.circle[:filled]
     end
+
+    args.outputs.labels << [0, 20, "Diameter: #{args.state.circle[:diameter]}"]
+    args.outputs.labels << [0, 40, "Filled? #{args.state.circle[:filled]}"]
   end
 
   def circle_primitive(diameter)
