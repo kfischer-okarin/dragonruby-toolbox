@@ -72,6 +72,7 @@ module DRT
     class BorderRenderer
       def initialize(radius)
         @radius = radius
+        @radius_sqr = @radius**2
         @lines = []
         build_eighth
         @lines += reverse_xy(@lines)
@@ -106,9 +107,13 @@ module DRT
         y1 = last_line ? last_line.y2 + 1 : 0
         y2 = y1
 
-        y2 += 1 while (x + 1)**2 + (y2 + 2)**2 <= @radius**2
+        y2 += 1 while diff_to_perfect_circle(x, y2 + 1) < diff_to_perfect_circle(x, y2)
 
         [x, y1, x, y2]
+      end
+
+      def diff_to_perfect_circle(x, y)
+        ((x + 1)**2 + (y + 1)**2 - @radius_sqr).abs
       end
 
       def line_needed?
