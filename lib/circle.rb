@@ -78,7 +78,13 @@ module DRT
       end
 
       def primitives
-        @lines
+        @lines.map { |line|
+          # Fix for DragonRuby Line Render Bug
+          [line.x1, line.y1 + 1, line.x2, line.y2 + 1, 255, 255, 255].line.tap { |primitive|
+            primitive.x2 += 1 if primitive.y1 == primitive.y2
+            primitive.y2 += 1 if primitive.x1 == primitive.x2
+          }
+        }
       end
 
       private
@@ -97,22 +103,23 @@ module DRT
       def build_next_line
         last_line = @lines.last
         x = last_line ? last_line.x - 1 : @radius - 1
-        y1 = last_line ? last_line.y2 : 0
-        y2 = y1 + 1
+        y1 = last_line ? last_line.y2 + 1 : 0
+        y2 = y1
 
-        y2 += 1 while x**2 + y2**2 <= @radius**2
-        [x, y1, x, y2, 255, 255, 255].line
+        y2 += 1 while (x + 1)**2 + (y2 + 2)**2 <= @radius**2
+
+        [x, y1, x, y2]
       end
 
       def line_needed?
         return true if @lines.empty?
 
         last_line = @lines.last
-        last_line.y1 <= last_line.x
+        last_line.y2 <= last_line.x
       end
 
       def length(line)
-        line.y2 - line.y1
+        line.y2 - line.y1 + 1
       end
 
       def line_is_growing?(line)
@@ -125,11 +132,11 @@ module DRT
       def fix_lines(min_length)
         index_of_first_shorter_line = @lines.find_index { |line| length(line) < min_length }
         @lines = @lines[0..index_of_first_shorter_line] # Drop all lines after that line
-        @lines.last.y2 = @lines.last.y1 + min_length # Adjust it to the minimum length
+        @lines.last.y2 = @lines.last.y1 + min_length - 1 # Adjust it to the minimum length
       end
 
       def reverse_xy(lines)
-        lines.map { |line| [line.y1 - 1, line.x1 + 1, line.y2 - 1, line.x2 + 1, line.r, line.g, line.b].line }
+        lines.map { |line| [line.y1, line.x1, line.y2, line.x2] }
       end
     end
 
@@ -138,8 +145,12 @@ module DRT
       def build_eighth
         super
         @lines = @lines.map { |line|
-          [0, line.y1 - 1, line.x + 1, line.y2 - line.y1, 255, 255, 255].solid
+          [0, line.y1, line.x + 1, length(line), 255, 255, 255].solid
         }
+      end
+
+      def primitives
+        @lines
       end
 
       def reverse_xy(solids)
