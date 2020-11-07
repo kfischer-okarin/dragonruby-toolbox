@@ -12,6 +12,7 @@
 - [Contents](#contents)
   - [Autotiles](#autotiles)
   - [Low Resolution Canvas](#low-resolution-canvas)
+  - [Quaternions](#quaternions)
   - [Transformations](#transformations)
   - [Color class with HSV/HSL support](#color-class-with-hsvhsl-support)
   - [Color accessor for attr_sprite enhanced classes](#color-accessor-for-attr_sprite-enhanced-classes)
@@ -101,6 +102,13 @@ def tick(args)
   args.outputs.primitives << args.state.canvas
 end
 ```
+
+
+### [Quaternions]
+
+File to include: [`lib/quaternion.rb`](./lib/quaternion.rb)
+
+(Example coming soon)
 
 
 ### [Transformations](./app/transformations.rb)
