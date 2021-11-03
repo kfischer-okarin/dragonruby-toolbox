@@ -39,6 +39,9 @@ class DamageNumbersExample
     end
 
     def tick
+      if @tick_count < 20 && @tick_count.mod_zero?(2)
+        set_random_digits
+      end
       @tick_count += 1
     end
 
@@ -85,6 +88,10 @@ class DamageNumbersExample
           remainder = remainder.idiv 10
         end
       }
+    end
+
+    def set_random_digits
+      @current_digits = @digits.map { (rand * 10).floor }
     end
   end
 
