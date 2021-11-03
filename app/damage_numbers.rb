@@ -6,6 +6,7 @@ class DamageNumbersExample
       play_animation(args)
     else
       start_animation_on_space(args)
+      args.outputs.primitives << [10, 30, 'Press SPACE to show damage animation'].label
     end
   end
 
