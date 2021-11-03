@@ -15,22 +15,25 @@ require 'lib/autotile.rb'
 require 'app/autotiles.rb'
 
 def tick(args)
-  if $example
-    $example.tick(args)
+  if $current_example
+    $current_example.tick(args)
 
-    $example = nil if args.inputs.keyboard.key_down.escape
+    $current_example = nil if args.inputs.keyboard.key_down.escape
   else
+    setup_examples if args.tick_count.zero?
     render_menu(args)
   end
 end
 
-EXAMPLES = [
-  { name: 'Transformations', example: TransformationsExample.new },
-  { name: 'Colors (HSV / HSL)', example: ColorsHsvHslExample.new },
-  { name: 'Colors (Accessor for attr_sprite)', example: ColorAccessorExample.new },
-  { name: 'Low Resolution Canvas', example: LowResolutionExample.new },
-  { name: 'Autotiles', example: AutotileExample.new }
-]
+def setup_examples
+  $examples = [
+    { name: 'Transformations', example: TransformationsExample.new },
+    { name: 'Colors (HSV / HSL)', example: ColorsHsvHslExample.new },
+    { name: 'Colors (Accessor for attr_sprite)', example: ColorAccessorExample.new },
+    { name: 'Low Resolution Canvas', example: LowResolutionExample.new },
+    { name: 'Autotiles', example: AutotileExample.new }
+  ]
+end
 
 BUTTONS = ('a'..'z').to_a
 
@@ -38,12 +41,12 @@ def render_menu(args)
   args.outputs.labels << { x: 400, y: 650, text: "Examples", size_enum: 2 }
 
   y = 600
-  EXAMPLES.each.with_index do |example, i|
+  $examples.each.with_index do |example, i|
     button = BUTTONS[i]
     args.outputs.labels << [400, y, "#{button}) #{example[:name]}"]
 
     if args.inputs.keyboard.key_down.send("#{button}!") # Use ! method to consume key event
-      $example = example[:example]
+      $current_example = example[:example]
       $gtk.reset
     end
 
