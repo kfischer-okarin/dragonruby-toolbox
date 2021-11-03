@@ -12,8 +12,7 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 
 Style/RedundantFileExtensionInRequire:
-  Exclude:
-    - game/**/*
+  Enabled: false
 
 Naming/MethodParameterName:
   AllowedNames:
