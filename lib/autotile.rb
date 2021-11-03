@@ -139,7 +139,7 @@ module DRT
     # It supports all attr_sprites methods and you can directly set and update the neighbors value on this object
     class Instance
       attr_accessor :x, :y, :w, :h, :r, :g, :b, :a, :angle, :flip_horizontally, :flip_vertically, :angle_anchor_x,
-                    :angle_anchor_y
+                    :angle_anchor_y, :blendmode_enum
 
       attr_reader :tile_x, :tile_y, :tile_w, :tile_h, :source_x, :source_y, :source_w, :source_h, :path,
                   :neighbors
@@ -477,7 +477,7 @@ module DRT
         @tile_positions_by_condition ||= ConditionMap.new.tap { |result|
           tiles_with_xy.each { |tile, tile_x, tile_y|
             condition = ->(n) { n.include?(tile[:value]) && n.exclude?(tile[:forbidden] || 255 - tile[:value]) }
-            result.register [tile_x, tile_y].freeze, condition
+            result.register({ x: tile_x, y: tile_y }.freeze, condition)
           }
         }
       end
@@ -628,7 +628,7 @@ module DRT
       class TileBuilder
         def initialize(path, tile_size)
           @part_size = tile_size.idiv 2
-          @tile_part_base = { w: @part_size, h: @part_size, tile_w: @part_size, tile_h: @part_size, path: path }.sprite
+          @tile_part_base = { w: @part_size, h: @part_size, tile_w: @part_size, tile_h: @part_size, path: path }.sprite!
 
           # Tile parts for a particular tile corner and corresponding offset inside tile
           # rubocop:disable Layout/ExtraSpacing
