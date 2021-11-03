@@ -1,3 +1,7 @@
+# Copyright (c) 2021 Kevin Fischer
+# https://github.com/kfischer-okarin/dragonruby-toolbox
+# Released under the MIT License (see repository)
+
 module DRT
   module Math
     # Calculates a parabola going through the given points.

@@ -1,8 +1,34 @@
+# Copyright (c) 2021 Kevin Fischer
+# https://github.com/kfischer-okarin/dragonruby-toolbox
+# Released under the MIT License (see repository)
+
 require 'lib/drt/math.rb'
 
 module DRT
   module DamageNumbers
-    # Random numbers, fall and bounce
+    # Creates a Breath of Fire 3 style damage number animation
+    #
+    # @example Create a damage number animation
+    #   animation = DRT::DamageNumbers::BoF3Style.new(
+    #     x: enemy.x, y: enemy.y,
+    #     amount: 999,
+    #     digit_sprites: DIGIT_SPRITES,
+    #     fall_height: 100
+    #   )
+    #
+    #   # Every tick do something like
+    #   unless animation.finished?
+    #     args.outputs.primitives << animation
+    #     animation.tick
+    #   end
+    #
+    # @param x [Integer] Starting x position of the damage number
+    # @param y [Integer] Starting y position of the damage number
+    # @param amount [Integer] Amount of damage
+    # @param digit_sprites [Array<Sprite>] Array of sprites for each digit (0 to 9)
+    # @param fall_height [Integer] How far the damage number will fall.
+    #   About 2.5 times the height of the digit sprites is close to the original
+    #   animation.
     class BoF3Style
       def initialize(x:, y:, amount:, digit_sprites:, fall_height:)
         @x = x
@@ -20,6 +46,7 @@ module DRT
       FALL_START = 20
       BOUNCE_START = 29
       BOUNCE_END = 51
+      ANIMATION_END = 74
 
       def tick
         set_random_digits if @tick_count < BOUNCE_START && @tick_count.mod_zero?(2)
@@ -31,7 +58,7 @@ module DRT
       end
 
       def finished?
-        @tick_count > 74
+        @tick_count > ANIMATION_END
       end
 
       def primitive_marker
