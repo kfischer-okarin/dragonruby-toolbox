@@ -16,6 +16,7 @@
   - [Transformations](#transformations)
   - [Color class with HSV/HSL support](#color-class-with-hsvhsl-support)
   - [Color accessor for attr_sprite enhanced classes](#color-accessor-for-attr_sprite-enhanced-classes)
+  - [Damage Number Animations](#damage-number-animations)
 - [Get Help](#get-help)
 - [Contributing](#contributing)
 - [License](#license)
@@ -124,6 +125,10 @@ File to include: [`lib/quaternion.rb`](./lib/quaternion.rb)
 ### [Color accessor for attr_sprite enhanced classes](./app/color_accessor.rb)
 
 ![Color accessor](gifs/color_accessor.gif)
+
+### [Damage Number Animations](./app/damage_numbers.rb)
+
+![Color accessor](gifs/damage_numbers.gif)
 
 
 ## Get Help
