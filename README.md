@@ -128,7 +128,7 @@ File to include: [`lib/quaternion.rb`](./lib/quaternion.rb)
 
 ### [Damage Number Animations](./app/damage_numbers.rb)
 
-![Color accessor](gifs/damage_numbers.gif)
+![Damage Numbers](gifs/damage_numbers.gif)
 
 
 ## Get Help
