@@ -1,3 +1,5 @@
+require 'lib/drt/damage_numbers/bof3_style.rb'
+
 class DamageNumbersExample
   def tick(args)
     if @animation
@@ -18,81 +20,12 @@ class DamageNumbersExample
   def start_animation_on_space(args)
     return unless args.inputs.keyboard.key_down.space
 
-    @animation = BoF3StyleDamage.new(
+    @animation = DRT::DamageNumbers::BoF3Style.new(
       x: 640, y: 360,
       amount: (rand * 255).ceil,
-      digit_sprites: (0..9).map { |k| GoodNeighborsFont.digit_sprite(k) }
+      digit_sprites: (0..9).map { |k| GoodNeighborsFont.digit_sprite(k) },
+      fall_height: 90 # 2.5 times the height of the font
     )
-  end
-
-  class BoF3StyleDamage
-    def initialize(x:, y:, amount:, digit_sprites:)
-      @x = x
-      @y = y
-      @digits = split_into_digits(amount)
-      @digit_sprites = digit_sprites
-
-      @current_x = x
-      @current_y = y
-      @current_digits = @digits
-      @tick_count = 0
-    end
-
-    def tick
-      if @tick_count < 20 && @tick_count.mod_zero?(2)
-        set_random_digits
-      end
-      @tick_count += 1
-    end
-
-    def finished?
-      @tick_count > 60
-    end
-
-    def primitive_marker
-      :sprite
-    end
-
-    def draw_override(ffi_draw)
-      @current_digits.each_with_index do |digit, index|
-        draw_digit(ffi_draw, digit, index)
-      end
-    end
-
-    def draw_digit(ffi_draw, digit, index)
-      sprite = @digit_sprites[digit]
-
-      # center digit
-      @digit_w ||= @digit_sprites.map(&:w).max
-      x = @current_x + index * @digit_w + (@digit_w - sprite.w).idiv(2)
-
-      ffi_draw.draw_sprite_3(
-        x, @current_y, sprite.w, sprite.h,
-        sprite.path,
-        sprite.angle,
-        sprite.a, sprite.r, sprite.g, sprite.b,
-        sprite.tile_x, sprite.tile_y, sprite.tile_w, sprite.tile_h,
-        sprite.flip_horizontally, sprite.flip_vertically,
-        sprite.angle_anchor_x, sprite.angle_anchor_y,
-        sprite.source_x, sprite.source_y, sprite.source_w, sprite.source_h
-      )
-    end
-
-    private
-
-    def split_into_digits(amount)
-      remainder = amount
-      [].tap { |digits|
-        while remainder.positive?
-          digits.insert(0, remainder % 10)
-          remainder = remainder.idiv 10
-        end
-      }
-    end
-
-    def set_random_digits
-      @current_digits = @digits.map { (rand * 10).floor }
-    end
   end
 
   # Produces digit sprites from the Good Neighbors sprite sheet
