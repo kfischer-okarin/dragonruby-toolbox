@@ -25,10 +25,10 @@ class TransformationsExample
 
     # Arrays and other primitives are also supported
     args.outputs.primitives << camera * [
-      [10, 10, 30, 30, 255, 255, 255].solid,
-      [10, 50, 30, 30, 255, 255, 255].border,
-      [10, 100, "Test", 255, 255, 255].label,
-      [10, 10, 1270, 710, 255, 255, 255].line
+      [10, 10, 30, 30, 255, 255, 255].solid!,
+      [10, 50, 30, 30, 255, 255, 255].border!,
+      [10, 100, "Test", 255, 255, 255].label!,
+      [10, 10, 1270, 710, 255, 255, 255].line!
     ]
 
     render_instructions(args.outputs)
@@ -100,7 +100,7 @@ class TransformationsExample
   end
 
   def render_instructions(outputs)
-    outputs.primitives << [0, 20, 'Press arrow keys to move the camera'].label
-    outputs.primitives << [0, 40, 'Press N to toggle night filter'].label
+    outputs.primitives << [0, 20, 'Press arrow keys to move the camera'].label!
+    outputs.primitives << [0, 40, 'Press N to toggle night filter'].label!
   end
 end

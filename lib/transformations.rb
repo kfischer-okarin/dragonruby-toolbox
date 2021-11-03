@@ -23,7 +23,7 @@ module DRT
         x y w h path angle a r g b source_x source_y source_w source_h tile_x tile_y tile_h tile_w
         flip_horizontally flip_vertically
         angle_anchor_x angle_anchor_y
-        text size_enum alignment_enum font
+        text size_enum alignment_enum vertical_alignment_enum font
         x2 y2
       ].each do |method|
         define_method method do
