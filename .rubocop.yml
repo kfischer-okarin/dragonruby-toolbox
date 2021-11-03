@@ -4,14 +4,27 @@ AllCops:
 Layout/LineLength:
   Max: 120
 
+Style/BlockDelimiters:
+  EnforcedStyle: semantic
+
+# DragonRuby basic
 Style/FrozenStringLiteralComment:
   Enabled: false
 
-Style/GlobalVars:
-  Enabled: false
-
 Style/RedundantFileExtensionInRequire:
-  Enabled: false
+  Exclude:
+    - game/**/*
 
-Style/BlockDelimiters:
-  EnforcedStyle: semantic
+Naming/MethodParameterName:
+  AllowedNames:
+    - x
+    - y
+    - w
+    - h
+    - r
+    - g
+    - b
+
+Style/GlobalVars:
+  AllowedVariables:
+    - $gtk
