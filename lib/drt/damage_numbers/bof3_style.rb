@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Kevin Fischer
+# Copyright (c) 2021-2022 Kevin Fischer
 # https://github.com/kfischer-okarin/dragonruby-toolbox
 # Released under the MIT License (see repository)
 
@@ -111,7 +111,7 @@ module DRT
       end
 
       def fall
-        @current_y = @y - @fall_height * (@tick_count - FALL_START) / (BOUNCE_START - FALL_START)
+        @current_y = @y - (@fall_height * (@tick_count - FALL_START) / (BOUNCE_START - FALL_START))
       end
 
       def bounce

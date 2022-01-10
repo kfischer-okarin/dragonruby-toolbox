@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Kevin Fischer
+# Copyright (c) 2021-2022 Kevin Fischer
 # https://github.com/kfischer-okarin/dragonruby-toolbox
 # Released under the MIT License (see repository)
 
@@ -10,26 +10,27 @@ module DRT
       def initialize(p1, p2, p3)
         denom = (p1.x - p2.x) * (p1.x - p3.x) * (p2.x - p3.x)
         @a = (
-          p3.x * (p2.y - p1.y) +
-          p2.x * (p1.y - p3.y) +
-          p1.x * (p3.y - p2.y)
+          (p3.x * (p2.y - p1.y)) +
+          (p2.x * (p1.y - p3.y)) +
+          (p1.x * (p3.y - p2.y))
         ) / denom
         @b = (
-          p3.x * p3.x * (p1.y - p2.y) +
-          p2.x * p2.x * (p3.y - p1.y) +
-          p1.x * p1.x * (p2.y - p3.y)
+          (p3.x * p3.x * (p1.y - p2.y)) +
+          (p2.x * p2.x * (p3.y - p1.y)) +
+          (p1.x * p1.x * (p2.y - p3.y))
         ) / denom
         @c = (
-          p2.x * p3.x * (p2.x - p3.x) * p1.y +
-          p3.x * p1.x * (p3.x - p1.x) * p2.y +
-          p1.x * p2.x * (p1.x - p2.x) * p3.y
+          (p2.x * p3.x * (p2.x - p3.x) * p1.y) +
+          (p3.x * p1.x * (p3.x - p1.x) * p2.y) +
+          (p1.x * p2.x * (p1.x - p2.x) * p3.y)
         ) / denom
         @start = [p1, p2, p3].min_by(&:x)
         @end = [p1, p2, p3].max_by(&:x)
       end
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Naming/MethodParameterName
 
       def y(x)
-        @a * x * x + @b * x + @c
+        (@a * x * x) + (@b * x) + @c
       end
 
       # Returns the point between the start (left most x) and end (right most x)
