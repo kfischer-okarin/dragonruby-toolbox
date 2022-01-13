@@ -1,13 +1,19 @@
 require 'lib/drt/damage_numbers/bof3_style.rb'
 
 class DamageNumbersExample
+  def initialize
+    @style_index = 0
+  end
+
   def tick(args)
     if @animation
       play_animation(args)
     else
+      args.outputs.primitives << [10, 30, 'Press SPACE to show damage animation. Press number to change style'].label
       start_animation_on_space(args)
-      args.outputs.primitives << [10, 30, 'Press SPACE to show damage animation'].label
+      handle_style_change(args)
     end
+    print_style_choices(args)
   end
 
   private
@@ -21,13 +27,41 @@ class DamageNumbersExample
   def start_animation_on_space(args)
     return unless args.inputs.keyboard.key_down.space
 
-    @animation = DRT::DamageNumbers::BoF3Style.new(
-      x: 640, y: 360,
-      amount: (rand * 255).ceil,
-      digit_sprites: (0..9).map { |k| GoodNeighborsFont.digit_sprite(k) },
-      fall_height: 90 # 2.5 times the height of the font
-    )
+    @animation = STYLES[@style_index].build_animation.call (rand * 255).ceil
   end
+
+  def handle_style_change(args)
+    input_char = args.inputs.text[0]
+    return unless ('0'..'9').include? input_char
+
+    input_number = input_char.to_i - 1
+    return unless input_number < STYLES.size
+
+    @style_index = input_number
+  end
+
+  def print_style_choices(args)
+    args.outputs.primitives << STYLES.map_with_index { |style, i|
+      marker = @style_index == i ? '> ' : '  '
+      {
+        x: 10, y: 710 - (i * 30), text: "#{marker} #{i + 1}. #{style[:name]}"
+      }.label!
+    }
+  end
+
+  STYLES = [
+    {
+      name: 'Breath of Fire 3 Style',
+      build_animation: lambda { |amount|
+        DRT::DamageNumbers::BoF3Style.new(
+          x: 640, y: 360,
+          amount: amount,
+          digit_sprites: (0..9).map { |k| GoodNeighborsFont.digit_sprite(k) },
+          fall_height: 90 # 2.5 times the height of the font
+        )
+      }
+    }
+  ].freeze
 
   # Produces digit sprites from the Good Neighbors sprite sheet
   module GoodNeighborsFont
