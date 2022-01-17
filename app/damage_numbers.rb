@@ -3,6 +3,7 @@ require 'lib/drt/damage_numbers/bof3_style.rb'
 class DamageNumbersExample
   def initialize
     @style_index = 0
+    @tick_slowdown_factor = 1
   end
 
   def tick(args)
@@ -12,15 +13,17 @@ class DamageNumbersExample
       args.outputs.primitives << [10, 30, 'Press SPACE to show damage animation. Press number to change style'].label
       start_animation_on_space(args)
       handle_style_change(args)
+      handle_slowdown_change(args)
     end
     print_style_choices(args)
+    print_slowdown(args)
   end
 
   private
 
   def play_animation(args)
     args.outputs.primitives << @animation
-    @animation.tick
+    @animation.tick if args.tick_count.mod_zero? @tick_slowdown_factor
     @animation = nil if @animation.finished?
   end
 
@@ -40,6 +43,14 @@ class DamageNumbersExample
     @style_index = input_number
   end
 
+  def handle_slowdown_change(args)
+    if args.inputs.keyboard.key_down.up
+      @tick_slowdown_factor += 1
+    elsif args.inputs.keyboard.key_down.down
+      @tick_slowdown_factor = [1, @tick_slowdown_factor - 1].max
+    end
+  end
+
   def print_style_choices(args)
     args.outputs.primitives << STYLES.map_with_index { |style, i|
       marker = @style_index == i ? '> ' : '  '
@@ -47,6 +58,17 @@ class DamageNumbersExample
         x: 10, y: 710 - (i * 30), text: "#{marker} #{i + 1}. #{style[:name]}"
       }.label!
     }
+  end
+
+  def print_slowdown(args)
+    args.outputs.primitives << [
+      {
+        x: 1270, y: 710, text: "Slowdown: #{@tick_slowdown_factor}x", alignment_enum: 2
+      }.label!,
+      {
+        x: 1270, y: 690, text: "Press up/down to change slowdown", alignment_enum: 2
+      }.label!
+    ]
   end
 
   STYLES = [
