@@ -1,4 +1,5 @@
 require 'lib/drt/damage_numbers/bof3_style.rb'
+require 'lib/drt/damage_numbers/lufia2_style.rb'
 
 class DamageNumbersExample
   def initialize
@@ -80,6 +81,16 @@ class DamageNumbersExample
           amount: amount,
           digit_sprites: (0..9).map { |k| GoodNeighborsFont.digit_sprite(k) },
           fall_height: 90 # 2.5 times the height of the font
+        )
+      }
+    },
+    {
+      name: 'Lufia 2 Style',
+      build_animation: lambda { |amount|
+        DRT::DamageNumbers::Lufia2Style.new(
+          x: 640, y: 360,
+          amount: amount,
+          digit_sprites: (0..9).map { |k| GoodNeighborsFont.digit_sprite(k) }
         )
       }
     }
